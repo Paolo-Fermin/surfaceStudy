@@ -4,6 +4,7 @@ start_time = datetime.now()
 
 from os import path
 from os import getcwd
+from os import getpid
 from PyFoam.RunDictionary.SolutionDirectory import SolutionDirectory
 from PyFoam.RunDictionary.ParsedParameterFile import ParsedParameterFile
 from PyFoam.Error import error
@@ -34,7 +35,7 @@ dire.addToClone('scripts')
 
 for temp in temps:
 	for depth in depths:
-		
+	
 		#clone base case
 		clone_name = 'dTdz%0.3f_z%d' % (temp, depth)
 		clone = dire.cloneCase(clone_name)
@@ -58,6 +59,7 @@ for temp in temps:
 
 		#run solver
 		print('Running solver...')
+		print('PID: ' + str(os.getpid()))
 		run_solver = BasicRunner(argv=['trainingSolver', '-case', clone.name], logname='trainingSolver', lam=machine)
 		run_solver.start()
 		if not run_solver.runOK():
@@ -69,5 +71,7 @@ for temp in temps:
 		run_postprocess.start()
 		if not run_postprocess.runOK():
 			errror('There was a problem running postprocessing')
+		
+
 		
 print('Execution time: ' + str(datetime.now() - startTime))
