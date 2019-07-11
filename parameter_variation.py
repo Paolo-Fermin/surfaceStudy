@@ -1,3 +1,7 @@
+from datetime import datetime
+
+start_time = datetime.now()
+
 from os import path
 from os import getcwd
 from PyFoam.RunDictionary.SolutionDirectory import SolutionDirectory
@@ -18,9 +22,15 @@ temps = [0.01, 0.005, 0.001]
 depths = [-30.0, -60.0, -90.0]
 
 base_case = 'basecase'
+if not path.exists(path.join(base_case,'0')):
+	import shutil
+	print('Copying 0 directory')
+	shutil.copytree(path.join(base_case, '0.org'), path.join(base_case, '0'))
+	print('Copied 0 directory')	
 
 dire = SolutionDirectory(base_case, archive=None)
 dire.addToClone('0') 	#make sure initial timestep directory is copied into clones
+dire.addToClone('scripts')
 
 for temp in temps:
 	for depth in depths:
@@ -59,7 +69,5 @@ for temp in temps:
 		run_postprocess.start()
 		if not run_postprocess.runOK():
 			errror('There was a problem running postprocessing')
-
 		
-		
-
+print('Execution time: ' + str(datetime.now() - startTime))
