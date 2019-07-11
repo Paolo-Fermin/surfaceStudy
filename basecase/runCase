@@ -1,0 +1,20 @@
+#!/bin/bash
+
+## Copy zero files 
+rm -fr 0
+cp -R 0.org 0
+
+## Create the initial conditions 
+setInitialFields > log.setInitialFields 
+
+## Decompose the domain and run the solver
+decomposePar -force > log.decomposePar
+mpirun -np 4 trainingSolver -parallel > log.trainingsolver
+
+## Run the postprocessing
+mpirun -np 4 postProcess -func sample -parallel > log.sample
+
+## run the octave script
+cd scripts
+octave plotFarWake.m
+cd ..

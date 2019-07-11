@@ -1,0 +1,92 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  1.5                                   |
+|   \\  /    A nd           | Web:      http://www.OpenFOAM.org               |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      probesDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+    probes
+    {
+        // Where to load it from
+        functionObjectLibs ( "libsampling.so" );
+
+        type            probes;
+        
+        // Name of the directory for probe data
+        name            probesCenter;
+
+        // Write at same frequency as fields
+        //outputControl   outputTime; // works
+        //outputControl 1;
+        outputControl timeStep;
+        outputInterval  1;
+
+        // Fields to be probed
+        fields
+        (
+            U k epsilon nut
+        );
+
+        probeLocations
+        (
+            ( 0.5 0.000 -4.5 )        // at center
+        );
+    }
+
+    //probesArea
+    //{
+    //    // Where to load it from
+    //    functionObjectLibs ( "libsampling.so" );
+
+    //    type            probes;
+
+    //    // Name of the directory for probe data
+    //    name            probesArea;
+
+    //    // Write at same frequency as fields
+    //    //outputControl   outputTime;
+    //    outputControl   timeStep;
+    //    // ouputControl 1;
+    //    outputInterval  1;
+
+    //    // Fields to be probed
+    //    fields
+    //    (
+    //        U
+    //    );
+
+    //    probeLocations
+    //    (
+    //        ( 0.5 0.1 0.1 )        // at center
+    //        ( 0.5 -1.0 0 )		// along y axis
+    //        ( 0.5 -0.8 0 )		
+    //        ( 0.5 -0.6 0 )		
+    //        ( 0.5 -0.4 0 )	
+    //        ( 0.5 -0.2 0 )	
+    //        ( 0.5 0.2 0 )	
+    //        ( 0.5 0.4 0 )	
+    //        ( 0.5 0.6 0 )	
+    //        ( 0.5 0.8 0 )	
+    //        ( 0.5 1.0 0 )	
+    //        ( 0.5 0 -1.0 )		// along z axis
+    //        ( 0.5 0 -0.8 )	
+    //        ( 0.5 0 -0.6 )	
+    //        ( 0.5 0 -0.4 )	
+    //        ( 0.5 0 -0.2 )	
+    //        ( 0.5 0 0.2 )	
+    //        ( 0.5 0 0.4 )	
+    //        ( 0.5 0 0.6 )	
+    //        ( 0.5 0 0.8 )	
+    //        ( 0.5 0 1.0 )	
+    //    );
+    //}
+// ************************************************************************* //

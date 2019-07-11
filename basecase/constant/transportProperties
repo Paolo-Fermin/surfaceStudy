@@ -1,0 +1,31 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM Extend Project: Open Source CFD        |
+|  \\    /   O peration     | Version:  1.6-ext                               |
+|   \\  /    A nd           | Web:      www.extend-project.de                 |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      transportProperties;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+transportModel  Newtonian;
+
+nu              nu [0 2 -1 0 0 0 0] 1e-06;
+
+Pr		Pr  [0 0 0 0 0 0 0] 0.7;
+
+Prt             Prt [0 0 0 0 0 0 0] 1.0;
+
+Sc              Sc  [0 0 0 0 0 0 0] 700.0;
+
+Sct             Sct  [0 0 0 0 0 0 0] 1.0;
+
+K0              K0 [1 -1 -2 0 0 0 0] 2.2e9;
+
+// ************************************************************************* //

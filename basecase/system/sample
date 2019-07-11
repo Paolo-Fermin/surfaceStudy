@@ -1,0 +1,61 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM Extend Project: Open source CFD        |
+|  \\    /   O peration     | Version:  1.6-ext                               |
+|   \\  /    A nd           | Web:      www.extend-project.de                 |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    system;
+    object      sampleDict;
+}
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+type sets; //surfaces; 
+libs ("libsampling.so");
+
+setFormat raw;
+
+surfaceFormat vtk;
+
+interpolationScheme cell;
+
+fields
+(
+   U k epsilon nut rho 
+);
+
+
+sets
+(
+    surface
+    {
+        type        midPointAndFace;
+        axis        y;
+        start       (0.5 0.0 -0.001);
+        end         (0.5 750.0 -0.001);
+
+    } 
+);
+
+
+surfaces
+(
+    nut_iso
+    {
+	type 		isoSurface;
+        isoField  	nut;
+        isoValue	0.00027;
+	interpolate     true;
+	regularise	false;
+    }
+
+);
+
+
+// *********************************************************************** //

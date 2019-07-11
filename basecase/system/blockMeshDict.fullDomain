@@ -1,0 +1,135 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  1.5                                   |
+|   \\  /    A nd           | Web:      http://www.OpenFOAM.org               |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      blockMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+convertToMeters 1;
+
+vertices        
+(
+	(0 -500 -250)	//0
+	(1 -500 -250)	//1
+	(1  500 -250)	//2
+	(0  500 -250)	//3
+
+	(0 -500    0)  //4
+	(1 -500    0)  //5
+	(1  500    0)	//6
+	(0  500    0)	//7
+
+	(1  750 -250)	//8
+	(0  750 -250)	//9
+	(1  750    0)	//10
+	(0  750    0)	//11
+
+	(0 -750 -250)	//12
+	(1 -750 -250)	//13
+	(0 -750    0)  //14
+	(1 -750    0)  //15
+);
+
+blocks          
+(
+// very coarse (2.0m mesh) 3 processors
+//    	hex ( 0  1  2  3  4  5  6  7)   (1 1001 125) simpleGrading (1 1     1) // center domain - 125K cells
+//    	hex ( 3  2  8  9  7  6 10 11)   (1   26 125) simpleGrading (1 35.4  1) // right beach - 3.125K cells
+//    	hex (12 13  1  0 14 15  5  4)   (1   26 125) simpleGrading (1 0.028 1) // left beach - 3.125K cells
+
+// coarse (1.0m mesh) 12 processors
+    	hex ( 0  1  2  3  4  5  6  7)   (1 1001 251) simpleGrading (1 1     1) // center domain - 500K cells
+    	hex ( 3  2  8  9  7  6 10 11)   (1   26 251) simpleGrading (1 36.25 1) // right beach - 12.5K cells
+    	hex (12 13  1  0 14 15  5  4)   (1   26 251) simpleGrading (1 0.027 1) // left beach - 12.5K cells
+
+// medium (0.5m mesh) 48 processors
+//    	hex ( 0  1  2  3  4  5  6  7)   (1 2001 501) simpleGrading (1 1     1) // center domain - 2M cells
+//    	hex ( 3  2  8  9  7  6 10 11)   (1  51 501) simpleGrading (1 36.7  1) // right beach - 50K cells
+//    	hex (12 13  1  0 14 15  5  4)   (1  51 501) simpleGrading (1 0.027 1) // left beach - 50K cells
+
+// fine (0.25m mesh) 192 processors
+//    	hex ( 0  1  2  3  4  5  6  7)   (1 8001 1001) simpleGrading (1 1     1) // center domaina - 8M cells
+//    	hex ( 3  2  8  9  7  6 10 11)   (1  201 1001) simpleGrading (1 36.9  1) // right beach - 200K cells
+//    	hex (12 13  1  0 14 15  5  4)   (1  201 1001) simpleGrading (1 0.027 1) // left beach - 200K cells
+
+// very fine (0.125m mesh) 768 processors
+//    	hex ( 0  1  2  3  4  5  6  7)   (1 16001 2001) simpleGrading (1 1     1) // center domain - 32M cells
+//    	hex ( 3  2  8  9  7  6 10 11)   (1   401 2001) simpleGrading (1 37.1  1) // right beach - 800K cells
+//    	hex (12 13  1  0 14 15  5  4)   (1   401 2001) simpleGrading (1 0.027 1) // left beach - 800K cells
+
+);
+
+edges           
+(
+);
+
+boundary
+(
+    farfield 
+    {
+        type patch;
+        faces
+        (
+		( 9 11 10  8)
+		(12 13 15 14)
+        );
+    }
+    bottom
+    {
+        type patch;
+        faces
+        (
+		(0 3 2 1)
+		(3 9 8 2)
+		(12 0 1 13)
+        );
+    }
+    atmosphere 
+    {
+        type patch;
+        faces
+        (
+		(4 5 6 7)
+		(7 6 10 11)
+		(14 15 5 4)
+	);
+    }
+    front
+    {
+	type cyclic;
+        neighbourPatch back;
+        faces
+	(
+		(0 4 7 3)    
+		(3 7 11 9)    
+		(12 14  4  0)    
+        );
+     }
+     back
+     {
+	type cyclic;
+        neighbourPatch front;
+        faces
+        (
+
+		(2 6 5 1)
+		(8 10 6 2)
+		( 1  5 15 13)
+	);
+      }
+);
+
+mergePatchPairs
+(
+);
+
+// ************************************************************************* //

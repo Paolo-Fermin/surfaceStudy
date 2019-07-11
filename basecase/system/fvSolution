@@ -1,0 +1,207 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM Extend Project: Open Source CFD        |
+|  \\    /   O peration     | Version:  1.6-ext                               |
+|   \\  /    A nd           | Web:      www.extend-project.de                 |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      fvSolution;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+solvers
+{
+    "(p|p_rgh|pFinal|p_rghFinal)"
+    {
+        solver GAMG;
+        preconditioner GAMG;
+        tolerance 1e-05;
+        relTol    1e-03;
+        smoother DICGaussSeidel;
+        cacheAgglomeration true;
+        nCellsInCoarsestLevel 100;
+        agglomerator faceAreaPair;
+        mergeLevels 1;
+        nPreSweeps       0;
+        nPostSweeps      2;
+        nFinestSweeps    2;
+/*
+        solver          PCG;
+        preconditioner  FDIC;
+        smoother        DICGaussSeidel;
+        tolerance       1e-08;
+        relTol          1e-06;
+        minIter         2;
+        maxIter         2000;
+*/
+    };
+
+    // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+    "(U|UFinal)"
+    {
+        solver          PBiCG;
+        preconditioner  DILU;
+        smoother        DILUGaussSeidel;
+        tolerance       1e-14;
+        relTol          0;
+        minIter         2;
+        maxIter         2000;
+    };
+
+    // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+    "(delT|delSalinity|delTFinal|delSalinityFinal|tracer|tracerFinal|T|TFinal|S|SFinal)"
+    {
+        solver          PBiCG;
+        preconditioner  DILU;
+        smoother        DILUGaussSeidel;
+        tolerance       1e-14;
+        relTol          0;
+        minIter         2;
+        maxIter         2000;
+    };
+
+    // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+    "(delC0|delC_1|delC_2|delC_3|delC_4|delC_5|delC_6)"
+    {
+        solver          PBiCG;
+        preconditioner  DILU;
+        smoother        DILUGaussSeidel;
+        tolerance       1e-14;
+        relTol          0;
+        minIter         2;
+        maxIter         2000;
+    };
+
+    // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+    "(k|epsilon|omega|R|kL|kFinal|epsilonFinal|omegaFinal|RFinal|kLFinal)"
+    {
+        solver          PBiCG;
+        preconditioner  DILU;
+        smoother        DILUGaussSeidel;
+        tolerance       1e-14;
+        relTol          0;
+        minIter         2;
+        maxIter         2000;
+    };
+
+    // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+    "(S_F|S_FFinal|S_Var|S_VarFinal)"
+    {
+        solver          PBiCG;
+        preconditioner  DILU;
+        smoother        DILUGaussSeidel;
+        tolerance       1e-14;
+        relTol          0;
+        minIter         2;
+        maxIter         2000;
+    };
+
+    // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+    "(S_epsilonTheta|S_epsilonThetaFinal)"
+    {
+        solver          PBiCG;
+        preconditioner  DILU;
+        smoother        DILUGaussSeidel;
+        tolerance       1e-14;
+        relTol          0;
+        minIter         2;
+        maxIter         2000;
+    };
+
+    // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+    "(salinity_F|salinity_FFinal|salinity_Var|salinity_VarFinal)"
+    {
+        solver          PBiCG;
+        preconditioner  DILU;
+        smoother        DILUGaussSeidel;
+        tolerance       1e-14;
+        relTol          0;
+        minIter         2;
+        maxIter         2000;
+    };
+
+    // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+    "(salinity_epsilonTheta|salinity_epsilonThetaFinal)"
+    {
+        solver          PBiCG;
+        preconditioner  DILU;
+        smoother        DILUGaussSeidel;
+        tolerance       1e-14;
+        relTol          0;
+        minIter         2;
+        maxIter         2000;
+    };
+
+}
+
+PIMPLE
+{
+    nCorrectors                 2;
+    nOuterCorrectors            2;
+    nNonOrthogonalCorrectors    1;
+    momentumPredictor           yes;
+    turbOnFinalIterOnly         no;
+    
+//    pRefCell                    0;
+    pRefPoint		(0.5 749.95 -249.95);
+    pRefValue                   0;
+
+    residualControl
+    {}
+}
+
+relaxationFactors
+{
+    fields
+    {
+        p           0.7;
+        pFinal      1.0;
+        p_rgh       0.7;
+        p_rghFinal  1.0;
+    }
+
+    equations
+    {
+        U       0.7;
+        UFinal  1.0;
+
+        "(T|S)"           0.7;
+        "(TFinal|SFinal)" 1.0;
+
+        "(delT|delSalinity)"           0.7;
+        "(delTFinal|delSalinityFinal)" 1.0;
+
+        "(R|k|epsilon|omega)"                       0.7;
+        "(RFinal|kFinal|epsilonFinal|omegaFinal)"   1.0;
+
+        "(kL)"                                      0.7;
+        "(kLFinal)"                                 1.0;
+
+        "(S_F|S_Var)"                               0.7;
+        "(S_FFinal|S_VarFinal)"                     1.0;
+
+        "(S_epsilonTheta)"                          0.7;
+        "(S_epsilonThetaFinal)"                     1.0;
+
+        "(salinity_F|salinity_Var)"                 0.7;
+        "(salinity_FFinal|salinity_VarFinal)"       1.0;
+
+        "(salinity_epsilonTheta)"                   0.7;
+        "(salinity_epsilonThetaFinal)"              1.0;
+    }
+}
+
+// ************************************************************************* //

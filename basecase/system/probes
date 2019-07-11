@@ -1,0 +1,39 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2.1.x                                 |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+
+probes
+{
+// Where to load it from
+functionObjectLibs ( "libsampling.so" );
+
+type        probes;
+
+// Name of the directory for probe data
+name        probes;
+
+// Fields to be probed
+fields ( 
+        U
+	k
+	epsilon
+//	delT
+//	TBackground
+//	rho
+//        rhoBackground 
+       );
+
+probeLocations
+(
+//   (  0.5 10.0 -110.0 )         // at center of the motor bike mask
+//   (  0.5 10.0 -140.0 )         // at top of the helmet
+//   (  0.5 30.0 -110.0 )         // at tail of the motorbike
+//   (  0.5 30.0 -140.0 )
+   (  0.5 0.01 -125.0 )
+);
+}
+// ************************************************************************* //
