@@ -3,7 +3,7 @@ clear all
 % set some simulation info
 dataStart = 0;
 % change the dataEnd to 3600
-dataEnd =120;
+dataEnd = 3600;
 dataInterval = 30;
 Uship = 5.0
 cellX = Uship*dataInterval;
