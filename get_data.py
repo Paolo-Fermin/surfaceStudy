@@ -27,7 +27,6 @@ def downsample(dire, component_file):
 	component_filepath = os.path.join(dire, component_file)
 	print(component_filepath)
 	results = pd.read_csv(component_filepath)
-	#uz_results = pd.read_csv(os.path.join(case_dir, 'UzSym.csv'), header=None)
 	component_name = os.path.splitext(component_filepath)
 	print(component_name)
 
