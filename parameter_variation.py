@@ -18,7 +18,16 @@ num_procs = 4
 
 import csv
 
-temps = [0.01, 0.005, 0.001]
+test_cases = [
+	[0.005, -90],
+	[0.001, -30],
+	[0.001, -60],
+	[0.001, -90], 
+	[0.010, -30],
+	[0.005, -60]
+]
+
+temps = [0.005, 0.001]
 
 depths = [-30.0, -60.0, -90.0]
 
@@ -33,45 +42,47 @@ dire = SolutionDirectory(base_case, archive=None)
 dire.addToClone('0') 	#make sure initial timestep directory is copied into clones
 dire.addToClone('scripts')
 
-for temp in temps:
-	for depth in depths:
+for case in test_cases:
+
+	temp = case[0]
+	depth = case[1]
+
+	#clone base case
+	clone_name = 'dTdz%0.3f_z%d' % (temp, depth)
+	clone = dire.cloneCase(clone_name)
+
+	#read parameter file and change parameter
+	param_file = ParsedParameterFile(path.join(clone_name,'constant','parameterFile'))
+	param_file['dTdz'] = 'dTdz [0 -1 0 0 0 0 0] %0.3f' % temp
+	param_file['z0'] = 'z0 [0 1 0 0 0 0 0] %.1f' % depth
+	param_file.writeFile()
+
+	#set initial fields
+	run_initFields = BasicRunner(argv=['setInitialFields', '-case', clone.name], logname='setInitialFields')
+	run_initFields.start()
+	print('initial fields set')
+
+	#implement parallelization
+	print('Decomposing...')
+	Decomposer(args=['--progress', clone.name, num_procs])
+	CaseReport(args=['--decomposition', clone.name])
+	machine = LAMMachine(nr=num_procs)
+
+	#run solver
+	print('Running solver...')
+	print('PID: ' + str(getpid()))
+	run_solver = BasicRunner(argv=['trainingSolver', '-case', clone.name], logname='trainingSolver', lam=machine)
+	run_solver.start()
+	if not run_solver.runOK():
+		error('There was a problem with trainingSolver')
+	print('Finished running solver')
 	
-		#clone base case
-		clone_name = 'dTdz%0.3f_z%d' % (temp, depth)
-		clone = dire.cloneCase(clone_name)
+	#run postprocessing
+	run_postprocess = BasicRunner(argv=['postProcess', '-case', clone.name, '-func', 'sample'], logname='postProcessLog', lam=machine)
+	run_postprocess.start()
+	if not run_postprocess.runOK():
+		errror('There was a problem running postprocessing')
 	
-		#read parameter file and change parameter
-		param_file = ParsedParameterFile(path.join(clone_name,'constant','parameterFile'))
-		param_file['dTdz'] = 'dTdz [0 -1 0 0 0 0 0] %0.3f' % temp
-		param_file['z0'] = 'z0 [0 1 0 0 0 0 0] %.1f' % depth
-		param_file.writeFile()
-
-		#set initial fields
-		run_initFields = BasicRunner(argv=['setInitialFields', '-case', clone.name], logname='setInitialFields')
-		run_initFields.start()
-		print('initial fields set')
-
-		#implement parallelization
-		print('Decomposing...')
-		Decomposer(args=['--progress', clone.name, num_procs])
-		CaseReport(args=['--decomposition', clone.name])
-		machine = LAMMachine(nr=num_procs)
-
-		#run solver
-		print('Running solver...')
-		print('PID: ' + str(os.getpid()))
-		run_solver = BasicRunner(argv=['trainingSolver', '-case', clone.name], logname='trainingSolver', lam=machine)
-		run_solver.start()
-		if not run_solver.runOK():
-			error('There was a problem with trainingSolver')
-		print('Finished running solver')
-		
-		#run postprocessing
-		run_postprocess = BasicRunner(argv=['postProcess', '-case', clone.name, '-func', 'sample'], logname='postProcessLog', lam=machine)
-		run_postprocess.start()
-		if not run_postprocess.runOK():
-			errror('There was a problem running postprocessing')
-		
 
 		
 print('Execution time: ' + str(datetime.now() - startTime))
