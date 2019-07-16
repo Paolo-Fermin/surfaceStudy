@@ -31,6 +31,7 @@ temps = [0.005, 0.001]
 
 depths = [-30.0, -60.0, -90.0]
 
+copy_dir = 'openfoamruns'
 base_case = 'basecase'
 if not path.exists(path.join(base_case,'0')):
 	import shutil
@@ -48,7 +49,7 @@ for case in test_cases:
 	depth = case[1]
 
 	#clone base case
-	clone_name = 'dTdz%0.3f_z%d' % (temp, depth)
+	clone_name = '/%s/dTdz%0.3f_z%d' % (copy_dir, temp, depth)
 	clone = dire.cloneCase(clone_name)
 
 	#read parameter file and change parameter
@@ -58,27 +59,27 @@ for case in test_cases:
 	param_file.writeFile()
 
 	#set initial fields
-	run_initFields = BasicRunner(argv=['setInitialFields', '-case', clone.name], logname='setInitialFields')
+	run_initFields = BasicRunner(argv=['setInitialFields', '-case', clone_name], logname='setInitialFields')
 	run_initFields.start()
 	print('initial fields set')
 
 	#implement parallelization
 	print('Decomposing...')
-	Decomposer(args=['--progress', clone.name, num_procs])
-	CaseReport(args=['--decomposition', clone.name])
+	Decomposer(args=['--progress', clone_name, num_procs])
+	CaseReport(args=['--decomposition', clone_name])
 	machine = LAMMachine(nr=num_procs)
 
 	#run solver
 	print('Running solver...')
 	print('PID: ' + str(getpid()))
-	run_solver = BasicRunner(argv=['trainingSolver', '-case', clone.name], logname='trainingSolver', lam=machine)
+	run_solver = BasicRunner(argv=['trainingSolver', '-case', clone_name], logname='trainingSolver', lam=machine)
 	run_solver.start()
 	if not run_solver.runOK():
 		error('There was a problem with trainingSolver')
 	print('Finished running solver')
 	
 	#run postprocessing
-	run_postprocess = BasicRunner(argv=['postProcess', '-case', clone.name, '-func', 'sample'], logname='postProcessLog', lam=machine)
+	run_postprocess = BasicRunner(argv=['postProcess', '-case', clone_name, '-func', 'sample'], logname='postProcessLog', lam=machine)
 	run_postprocess.start()
 	if not run_postprocess.runOK():
 		errror('There was a problem running postprocessing')
