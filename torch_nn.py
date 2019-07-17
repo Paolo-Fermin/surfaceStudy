@@ -1,3 +1,7 @@
+from datetime import datetime
+
+start_time = datetime.now()
+
 import os
 import torch
 import torch.nn as nn
@@ -13,7 +17,7 @@ from torch.utils.data.dataset import random_split
 torch.manual_seed(8)
 
 model = nn.Sequential(
-	nn.ConvTranspose2d(1, 256, kernel_size=(7, 4), stride=1, padding=0),
+	nn.ConvTranspose2d(1, 256, kernel_size=(4, 7), stride=1, padding=0),
 	nn.PReLU(),
 	nn.InstanceNorm2d(1),
 	nn.ConvTranspose2d(256, 128, kernel_size=(4, 4), stride=2, padding=1),
@@ -105,43 +109,64 @@ loss_fn = nn.MSELoss()
 
 lr = 1e-5
 optimizer = optim.Adam(model.parameters(), lr=lr)
-epochs = 10
+epochs = 10000
+print_interval = 100
+
+#vars for plotting loss
+losses = []
+val_losses = []
 
 #training loop
 for epoch in range(epochs):
 
+	running_loss = 0.0
+	running_val_loss = 0.0
 	for x_batch, y_batch in train_loader:
 		#set model to training mode
 		model.train()	
 	
+		#print('x_batch = ' + str(x_batch))
+		#print('y_batch = ' + str(y_batch))
+		
 		#zero grads
 		optimizer.zero_grad()
 		#forward pass
-		y_pred = model(x)
+		y_pred = model(x_batch.view(1, 1, 1, 2))
 		#compute loss		
 		loss = loss_fn(y_batch, y_pred)
 		#compute gradients
 		loss.backward()
 		#update params and zero grads
 		optimizer.step()
-
+		
+		#losses.append(loss)
+		
 		#print stats
-		if i % 2000 == 1999:
-			print('[%d, %5d] training loss: %.3f' % (epoch + 1, i + 1 , loss))
-	
+		running_loss += loss.item()
+		if epoch % print_interval == print_interval - 1:
+			print('[%d] training loss: %.12fE' % (epoch, running_loss / print_interval))
+			running_loss = 0.0
+			print('Elapsed time: ' + str(datetime.now() - start_time))
+
 	with torch.no_grad():	
 		for x_val, y_val in val_loader:
 			
 			#set model to evaluation mode
 			model.eval()
 				
-			y_pred = model(x_val)
+			y_pred = model(x_val.view(1, 1, 1, 2))
 			val_loss = loss_fn(y_val, y_pred)
 			
+			val_losses.append(val_loss)
+		
 			#print stats
-			if i % 2000 == 1999:
-				print('[%d, %5d] validation loss: %.3f' % (epoch + 1, i + 1 , val_loss))
+			running_val_loss += loss.item()
+			if epoch % print_interval == print_interval - 1:
+				print('[%d] validation loss: %.12fE' % (epoch, running_val_loss / print_interval))
+				running_val_loss = 0.0
+				print('Elapsed time: ' + str(datetime.now() - start_time))
 		
 print('Finished training')
+print('Execution time: ' + str(datetime.now() - start_time))
 
 		
