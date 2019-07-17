@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms, utils
 from torch.utils.data.dataset import random_split
+from visdom import Visdom
 
 torch.manual_seed(8)
 
@@ -148,23 +149,25 @@ for epoch in range(epochs):
 			running_loss = 0.0
 			print('Elapsed time: ' + str(datetime.now() - start_time))
 
-	with torch.no_grad():	
-		for x_val, y_val in val_loader:
-			
-			#set model to evaluation mode
-			model.eval()
-				
-			y_pred = model(x_val.view(1, 1, 1, 2))
-			val_loss = loss_fn(y_val, y_pred)
-			
-			val_losses.append(val_loss)
+
+#validate net
+with torch.no_grad():	
+	for x_val, y_val in val_loader:
 		
-			#print stats
-			running_val_loss += loss.item()
-			if epoch % print_interval == print_interval - 1:
-				print('[%d] validation loss: %.12fE' % (epoch, running_val_loss / print_interval))
-				running_val_loss = 0.0
-				print('Elapsed time: ' + str(datetime.now() - start_time))
+		#set model to evaluation mode
+		model.eval()
+			
+		y_pred = model(x_val.view(1, 1, 1, 2))
+		val_loss = loss_fn(y_val, y_pred)
+		
+		#val_losses.append(val_loss)
+	
+		#print stats
+		running_val_loss += loss.item()
+		if epoch % print_interval == print_interval - 1:
+			print('[%d] validation loss: %.12fE' % (epoch, running_val_loss / print_interval))
+			running_val_loss = 0.0
+			#print('Elapsed time: ' + str(datetime.now() - start_time))
 		
 print('Finished training')
 print('Execution time: ' + str(datetime.now() - start_time))
