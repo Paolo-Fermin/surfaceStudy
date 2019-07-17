@@ -26,12 +26,13 @@ def downsample(dire, component_file):
 	#recombine file with directory path 
 	component_filepath = os.path.join(dire, component_file)
 	print(component_filepath)
-	results = pd.read_csv(component_filepath)
+	results = pd.read_csv(component_filepath, header=None)
 	component_name = os.path.splitext(component_filepath)
 	print(component_name)
 
 	results_down = results.iloc[:, ::8] #get every nth value 
 	results_down.drop(results_down.columns[-9:], axis=1, inplace=True) #drop last 9 columns to get even 256
+	print(results_down)
 	results_down.to_csv('%s_down.csv' % component_name[0])
 	
 
@@ -56,5 +57,6 @@ for case in case_dirs:
 
 	#iterate through each file in output dir and downsample
 	for f in os.listdir(case_output_dir):
-		downsample(case_output_dir, f)
+		if not f.endswith('_down.csv'):
+			downsample(case_output_dir, f)
 
