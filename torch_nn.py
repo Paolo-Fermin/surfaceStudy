@@ -8,6 +8,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms, utils
+from torch.utils.data.dataset import random_split
 
 torch.manual_seed(8)
 
@@ -73,12 +74,15 @@ class WakeDataset(Dataset):
 print('cwd: ' + str(os.getcwd()))
 
 wake_dataset = WakeDataset(os.path.join(os.getcwd(), 'data'))
-print(len(wake_dataset))
+#print(len(wake_dataset))
 
-data_loader = DataLoader(dataset=wake_dataset, batch_size=1, shuffle=True)
+train_dataset, val_dataset = random_split(wake_dataset, [7, 2])
 
-for i, sample in enumerate(data_loader):
-	print(next(iter(data_loader)))
+train_loader = DataLoader(dataset=train_dataset, batch_size=1, shuffle=True)
+val_loader = DataLoader(dataset=val_dataset, batch_size=1, shuffle=True)
+
+#for i, sample in enumerate(data_loader):
+#	print(next(iter(data_loader)))
 
 
 '''
@@ -96,19 +100,48 @@ for temp in temps:
 
 		summary(model, input_size=in_data.view(1, 2, 1).size())
 '''
-'''
+
 loss_fn = nn.MSELoss()
 
 lr = 1e-5
 optimizer = optim.Adam(model.parameters(), lr=lr)
-epochs = 10000
+epochs = 10
 
 #training loop
 for epoch in range(epochs):
-	
-	#set model to training mode
-	model.train()	
 
-	#forward pass
-	y_pred = model(x)
-'''
+	for x_batch, y_batch in train_loader:
+		#set model to training mode
+		model.train()	
+	
+		#zero grads
+		optimizer.zero_grad()
+		#forward pass
+		y_pred = model(x)
+		#compute loss		
+		loss = loss_fn(y_batch, y_pred)
+		#compute gradients
+		loss.backward()
+		#update params and zero grads
+		optimizer.step()
+
+		#print stats
+		if i % 2000 == 1999:
+			print('[%d, %5d] training loss: %.3f' % (epoch + 1, i + 1 , loss))
+	
+	with torch.no_grad():	
+		for x_val, y_val in val_loader:
+			
+			#set model to evaluation mode
+			model.eval()
+				
+			y_pred = model(x_val)
+			val_loss = loss_fn(y_val, y_pred)
+			
+			#print stats
+			if i % 2000 == 1999:
+				print('[%d, %5d] validation loss: %.3f' % (epoch + 1, i + 1 , val_loss))
+		
+print('Finished training')
+
+		
