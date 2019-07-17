@@ -86,4 +86,4 @@ for case in test_cases:
 	
 
 		
-print('Execution time: ' + str(datetime.now() - startTime))
+print('Execution time: ' + str(datetime.now() - start_time))
