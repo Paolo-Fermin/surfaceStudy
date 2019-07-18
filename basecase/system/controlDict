@@ -23,7 +23,7 @@ startTime       0;
 stopAt          endTime;
 
 // change endTime to 3600 for the real runs
-endTime         3600;
+endTime         3810;
 
 deltaT          1.0;
 
