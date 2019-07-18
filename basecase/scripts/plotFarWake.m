@@ -92,6 +92,7 @@ UzSym(abs(UzSym)<1.0E-10)=0;
 %set(gca,'FontSize',14)
 %title('Transverse (Off-Track) Surface Velocity [m/s]','FontSize',14)
 
+csvwrite('Uy.csv', Uy);
 csvwrite('UySym.csv',UySym);
 
 % plot the transverse velocity
@@ -113,4 +114,5 @@ csvwrite('UySym.csv',UySym);
 %set(gca,'FontSize',14)
 %title('Vertical Surface Velocity [m/s]','FontSize',14)
 
+csvwrite('Uz.csv', Uz)
 csvwrite('UzSym.csv',UzSym);
