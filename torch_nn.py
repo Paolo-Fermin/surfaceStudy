@@ -77,10 +77,12 @@ class WakeDataset(Dataset):
 
 print('cwd: ' + str(os.getcwd()))
 
-wake_dataset = WakeDataset(os.path.join(os.getcwd(), 'data'))
+train_dataset = WakeDataset(os.path.join(os.getcwd(), 'data'))
+test_dataset = WakeDataset(os.path.join(os.getcwd(), 'data', 'test_data'))
+
 #print(len(wake_dataset))
 
-train_dataset, val_dataset = random_split(wake_dataset, [7, 2])
+#train_dataset, val_dataset = random_split(wake_dataset, [7, 2])
 
 train_loader = DataLoader(dataset=train_dataset, batch_size=1, shuffle=True)
 val_loader = DataLoader(dataset=val_dataset, batch_size=1, shuffle=True)
