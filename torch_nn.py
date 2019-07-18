@@ -13,6 +13,10 @@ import matplotlib.pyplot as plt
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms, utils
 from torch.utils.data.dataset import random_split
+from ignite.engine import Events, create_supervised_trainer, create_supervised_evaluator
+from ignite.metrics import Loss
+import visdom
+
 
 torch.manual_seed(8)
 
@@ -40,16 +44,14 @@ class WakeDataset(Dataset):
 		print("root dir: " + str(self.root_dir))
 		print(os.listdir(self.root_dir))
 
-		input_combos = []
 		#get input variable combinations and store them in a list
 		#input vars are read from the case directories
+		input_combos = []
 		for case in os.listdir(root_dir):
 			if case.startswith('dTdz'):
 				input_combos.append([float(case[4:9]), float(case[-3:])])
 
 		self.length = len(input_combos)
-		#assign an index to each dTdz, d0 combination	
-		#for i in range(self.num_samples):
 
 		#turn input combos into a tensor
 		self.input_combos_tensor = torch.FloatTensor(input_combos)
@@ -61,112 +63,74 @@ class WakeDataset(Dataset):
 
 	def __getitem__(self, index):
 		#return data in necessary format
-		
-		#create array that will store 
-		#(dTdz, d0, [UySym_down], [UzSym_down])
 		case_dir = '/%s/dTdz%0.3f_z%d' % (self.root_dir, self.input_combos_tensor[index][0], self.input_combos_tensor[index][1])
 		uy_data = pd.read_csv(os.path.join(case_dir, 'UySym_down.csv'), index_col=0)
 		self.uy_data_tensor = torch.FloatTensor(uy_data.values)
-		#print(uy_data_tensor)
-		#uz_data = pd.read_csv(os.path.join(case_dir, 'UzSym_down.csv'), index_col=0)
-		#uz_data_tensor = torch.FloatTensor(uz_data.values)
-		#print(uz_data_tensor)
 
-		#self.images = torch.FloatTensor(uy_data.values, uz_data.values)		
 		return self.input_combos_tensor[index], self.uy_data_tensor
 
 print('cwd: ' + str(os.getcwd()))
 
 train_dataset = WakeDataset(os.path.join(os.getcwd(), 'data'))
 test_dataset = WakeDataset(os.path.join(os.getcwd(), 'data', 'test_data'))
-
-#print(len(wake_dataset))
-
 #train_dataset, val_dataset = random_split(wake_dataset, [7, 2])
+#print(len(wake_dataset))
 
 train_loader = DataLoader(dataset=train_dataset, batch_size=1, shuffle=True)
 val_loader = DataLoader(dataset=val_dataset, batch_size=1, shuffle=True)
 
-#for i, sample in enumerate(data_loader):
-#	print(next(iter(data_loader)))
-
-
-'''
-#create training dataset
-temps = [0.005, 0.001, 0.010]
-depths = [-30, -60, -90]
-
-for temp in temps:
-	for depth in depths:
-		data = [[temp], [depth]]
-		in_data = torch.tensor(data)
-		print(in_data)
-		print(in_data.size())
-		print("View = " + str(in_data.view(1, 2, 1)))
-
-		summary(model, input_size=in_data.view(1, 2, 1).size())
-'''
 
 loss_fn = nn.MSELoss()
 
 lr = 1e-5
 optimizer = optim.Adam(model.parameters(), lr=lr)
-epochs = 10000
-print_interval = 100
+epochs = 2000
+log_interval = 100
 
-#vars for plotting loss
-losses = []
-val_losses = []
+#create trainer and evaluator
+trainer = create_supervised_trainer(model, optimizer, loss_fn)
+evaluator = create_supervised_evaluator(model, metrics={'nll':Loss(loss)})
 
-#training loop
-for epoch in range(epochs):
+#create visdom plots
+vis = visdom.Visdom()
+def create_plot_window(vis, xlabel, ylabel, title):
+	return vis.line(X=np.array([1]), Y=np.array([np.nan]), opts=dict(xlabel=xlabel, ylabel=ylabel, title=title))
 
-	running_loss = 0.0
-	running_val_loss = 0.0
-	for x_batch, y_batch in train_loader:
-		#set model to training mode
-		model.train()	
-	
-		#print('x_batch = ' + str(x_batch))
-		#print('y_batch = ' + str(y_batch))
-		
-		#zero grads
-		optimizer.zero_grad()
-		#forward pass
-		y_pred = model(x_batch.view(1, 1, 1, 2))
-		#compute loss		
-		loss = loss_fn(y_batch, y_pred)
-		#compute gradients
-		loss.backward()
-		#update params and zero grads
-		optimizer.step()
-		
-		#losses.append(loss)
-		
-		#print stats
-		running_loss += loss.item()
-		if epoch % print_interval == print_interval - 1:
-			print('[%d] training loss: %.12fE' % (epoch, running_loss / print_interval))
-			running_loss = 0.0
-			print('Elapsed time: ' + str(datetime.now() - start_time))
+train_loss_window = create_plot_window(vis, '#Iterations', 'Loss', 'Training Loss')
+train_avg_loss_window = create_plot_window(vis, '#Iterations', 'Loss', 'Training Avg Loss')
+val_avg_loss_window = create_plot_window(vis, '#Epochs', 'Loss', 'Validation Avg Loss')
 
-	with torch.no_grad():	
-		for x_val, y_val in val_loader:
-			
-			#set model to evaluation mode
-			model.eval()
-				
-			y_pred = model(x_val.view(1, 1, 1, 2))
-			val_loss = loss_fn(y_val, y_pred)
-			
-			val_losses.append(val_loss)
-		
-			#print stats
-			running_val_loss += loss.item()
-			if epoch % print_interval == print_interval - 1:
-				print('[%d] validation loss: %.12fE' % (epoch, running_val_loss / print_interval))
-				running_val_loss = 0.0
-				print('Elapsed time: ' + str(datetime.now() - start_time))
+#event handlers
+@trainer.on(Events.ITERATION_COMPLETED)
+def log_training_loss(engine):
+	iter = (engine.state.iteration - 1) % len(train_loader) + 1
+	if iter % log_interval == 0:
+		print('Epoch [{}] Loss: {:.6e}'.format(engine.state.epoch, engine.state.output))
+		vis.line(X=np.array([engine.state.iteration]),
+			 Y=np.array([engine.state.output]),
+			 update='append', win=train_loss_window)
+
+@trainer.on(Events.EPOCH_COMPLETED)
+def log_training_results(trainer): 
+	evaluator.run(train_loader)
+	metric = evaluator.state.metrics
+	avg_nll = metrics['nll']
+	print('Training Results - Epoch: {} Avg Loss: {:.6e}'.format(engine.state.epoch, avg_nll))
+	vis.line(X=np.array([engine.state.epoch]), Y=np.array([avg_nll]), 
+		win=train_avg_loss_window, update='append')
+
+@trainer.on(Events.EPOCH_COMPLETED)
+def log_validation_results(trainer):
+	evaluator.run(val_loader)
+	metrics = evaluator.state.metrics
+	avg_nll = metrics['nll']
+	print('Validation Results - Epoch: {} Avg Loss: {:.6e}'.format(trainer.state.epoch, 			avg_nll))
+	vis.line(X=np.array([engine.state.epoch]), Y=np.array([avg_nll]), 
+		win=val_avg_loss_window, update='append')
+
+#run training
+trainer.run(train_loader, max_epochs=epochs)
+
 		
 print('Finished training')
 print('Execution time: ' + str(datetime.now() - start_time))
