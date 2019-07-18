@@ -14,7 +14,7 @@ from PyFoam.Execution.BasicRunner import BasicRunner
 from PyFoam.Applications.Decomposer import Decomposer
 from PyFoam.Applications.CaseReport import CaseReport
 from PyFoam.Execution.ParallelExecution import LAMMachine
-num_procs = 7
+num_procs = 4
 
 import csv
 
@@ -24,6 +24,17 @@ test_cases = []
 for temp in temps:
 	for depth in depths:
 		test_cases.append([temp, depth])
+
+#override previous instantiation 
+test_cases = [
+	[0.010, -45],
+	[0.001, -75], 
+	[0.010, -75], 
+	[0.008, -30],
+	[0.008, -60],
+	[0.008, -90]
+]
+	
 
 copy_dir = 'openfoamruns'
 base_case = 'basecase'
