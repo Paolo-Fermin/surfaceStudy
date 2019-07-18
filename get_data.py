@@ -30,8 +30,8 @@ def downsample(dire, component_file):
 	component_name = os.path.splitext(component_filepath)
 	print(component_name)
 
-	results_down = results.iloc[:, ::8] #get every nth value 
-	results_down.drop(results_down.columns[-9:], axis=1, inplace=True) #drop last 9 columns to get even 256
+	results_down = results.iloc[:, ::4] #get every nth value 
+	results_down.drop(results_down.columns[-17:], axis=1, inplace=True) #drop last 9 columns to get even 256
 	print(results_down)
 	results_down.to_csv('%s_down.csv' % component_name[0])
 	
@@ -50,13 +50,13 @@ base_path = os.getcwd()
 for case in case_dirs:
 	
 	orig_case_dir = os.path.join('openfoamruns', case, 'scripts')
-	case_output_dir = os.path.join(output_dir, case)	
+	case_output_dir = os.path.join(base_path, output_dir, case)	
 	
 	#comment this out to not run octave scripts	
-	#run_octave(orig_case_dir, case_output_dir)	
+	run_octave(orig_case_dir, case_output_dir)	
 
 	#iterate through each file in output dir and downsample
-	for f in os.listdir(case_output_dir):
-		if not f.endswith('_down.csv'):
-			downsample(case_output_dir, f)
+	#for f in os.listdir(case_output_dir):
+		#if not f.endswith('_down.csv'):
+			#downsample(case_output_dir, f)
 

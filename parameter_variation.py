@@ -14,22 +14,16 @@ from PyFoam.Execution.BasicRunner import BasicRunner
 from PyFoam.Applications.Decomposer import Decomposer
 from PyFoam.Applications.CaseReport import CaseReport
 from PyFoam.Execution.ParallelExecution import LAMMachine
-num_procs = 4
+num_procs = 7
 
 import csv
 
-test_cases = [
-	[0.005, -90],
-	[0.001, -30],
-	[0.001, -60],
-	[0.001, -90], 
-	[0.010, -30],
-	[0.005, -60]
-]
-
-temps = [0.005, 0.001]
-
-depths = [-30.0, -60.0, -90.0]
+temps = [0.005, 0.001, 0.010]
+depths = [-45, -75]
+test_cases = []
+for temp in temps:
+	for depth in depths:
+		test_cases.append([temp, depth])
 
 copy_dir = 'openfoamruns'
 base_case = 'basecase'
@@ -49,7 +43,7 @@ for case in test_cases:
 	depth = case[1]
 
 	#clone base case
-	clone_name = '/%s/dTdz%0.3f_z%d' % (copy_dir, temp, depth)
+	clone_name = '/%s/dTdz%0.3f_z%d' % (path.join(getcwd(), copy_dir), temp, depth)
 	clone = dire.cloneCase(clone_name)
 
 	#read parameter file and change parameter
