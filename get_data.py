@@ -50,10 +50,10 @@ base_path = os.getcwd()
 for case in case_dirs:
 	
 	orig_case_dir = os.path.join('openfoamruns', case, 'scripts')
-	case_output_dir = os.path.join(output_dir, case)	
+	case_output_dir = os.path.join(base_path, output_dir, case)	
 	
 	#comment this out to not run octave scripts	
-	#run_octave(orig_case_dir, case_output_dir)	
+	run_octave(orig_case_dir, case_output_dir)	
 
 	#iterate through each file in output dir and downsample
 	for f in os.listdir(case_output_dir):

@@ -14,7 +14,7 @@ from PyFoam.Execution.BasicRunner import BasicRunner
 from PyFoam.Applications.Decomposer import Decomposer
 from PyFoam.Applications.CaseReport import CaseReport
 from PyFoam.Execution.ParallelExecution import LAMMachine
-num_procs = 4
+num_procs = 7
 
 import csv
 
@@ -24,6 +24,12 @@ test_cases = []
 for temp in temps:
 	for depth in depths:
 		test_cases.append([temp, depth])
+
+test_cases = [
+	[.005, -75],
+	[.001, -45],
+	[.005, -45]
+]
 
 print(test_cases)
 
@@ -44,7 +50,7 @@ for case in test_cases:
 	depth = case[1]
 
 	#clone base case
-	clone_name = 'dTdz%0.3f_z%d' % (temp, depth)
+	clone_name = './openfoamruns/dTdz%0.3f_z%d' % (temp, depth)
 	#clone = dire.cloneCase(clone_name)
 
 	#change timestep to only run 7 more iterations
