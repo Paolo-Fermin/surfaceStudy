@@ -16,6 +16,7 @@ from torch.utils.data.dataset import random_split
 
 from ignite.engine import Events, create_supervised_trainer, create_supervised_evaluator
 from ignite.metrics import Loss
+
 import visdom
 
 torch.manual_seed(8)
@@ -98,7 +99,6 @@ loss_fn = nn.MSELoss()
 
 lr = 1e-3
 optimizer = optim.Adam(model.parameters(), lr=lr)
-
 epochs = 2000
 log_interval = 100
 
