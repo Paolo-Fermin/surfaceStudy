@@ -2,3 +2,4 @@ dT*
 basecaseBAK
 data/
 *.ipynb
+visdom_test.py
