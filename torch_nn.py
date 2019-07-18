@@ -21,7 +21,7 @@ import visdom
 torch.manual_seed(8)
 
 model = nn.Sequential(
-	nn.ConvTranspose2d(1, 256, kernel_size=(4, 7), stride=1, padding=0),
+	nn.ConvTranspose2d(1, 256, kernel_size=(2, 7), stride=1, padding=0),
 	nn.PReLU(),
 	nn.InstanceNorm2d(1),
 	nn.ConvTranspose2d(256, 128, kernel_size=(4, 4), stride=2, padding=1),
@@ -29,10 +29,12 @@ model = nn.Sequential(
 	nn.ConvTranspose2d(128, 64, kernel_size=(4, 4), stride=2, padding=1),
 	nn.PReLU(),
 	nn.ConvTranspose2d(64, 32, kernel_size=(4, 4), stride=2, padding=1),
-	nn.PReLU(),	
-	nn.ConvTranspose2d(32, 16, kernel_size=(4, 4), stride=2, padding=1),
 	nn.PReLU(),
-	nn.ConvTranspose2d(16, 1, kernel_size=(4, 4), stride=2, padding=1),		
+	nn.ConvTranspose2d(32, 16, kernel_size=(4, 4), stride=2, padding=1),
+	nn.PReLU(),	
+	nn.ConvTranspose2d(16, 8, kernel_size=(4, 4), stride=2, padding=1),
+	nn.PReLU(),
+	nn.ConvTranspose2d(8, 1, kernel_size=(4, 4), stride=2, padding=1),		
 	nn.Tanh()
 )
 
@@ -67,12 +69,12 @@ class WakeDataset(Dataset):
 		uy_data = pd.read_csv(os.path.join(case_dir, 'UySym_down.csv'), index_col=0)
 		self.uy_data_tensor = torch.FloatTensor(uy_data.values)
 
-		return self.input_combos_tensor[index], self.uy_data_tensor
+		return self.input_combos_tensor[index].view(1, 1, 2), self.uy_data_tensor.view(1, 1, 128, 256
 
 print('cwd: ' + str(os.getcwd()))
 
 train_dataset = WakeDataset(os.path.join(os.getcwd(), 'data'))
-test_dataset = WakeDataset(os.path.join(os.getcwd(), 'data', 'test_data'))
+val_dataset = WakeDataset(os.path.join(os.getcwd(), 'data', 'test_data'))
 #train_dataset, val_dataset = random_split(wake_dataset, [7, 2])
 #print(len(wake_dataset))
 
@@ -89,7 +91,7 @@ log_interval = 100
 
 #create trainer and evaluator
 trainer = create_supervised_trainer(model, optimizer, loss_fn)
-evaluator = create_supervised_evaluator(model, metrics={'nll':Loss(loss)})
+evaluator = create_supervised_evaluator(model, metrics={'nll':Loss(loss_fn)})
 
 #create visdom plots
 vis = visdom.Visdom()
