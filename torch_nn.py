@@ -15,8 +15,9 @@ from torchvision import transforms, utils
 from torch.utils.data.dataset import random_split
 from wake_dataset import WakeDataset
 
-from ignite.engine import ModelCheckpoint, Events, create_supervised_trainer, create_supervised_evaluator
+from ignite.engine import Events, create_supervised_trainer, create_supervised_evaluator
 from ignite.metrics import Loss
+from ignite.handlers import ModelCheckpoint
 
 import visdom
 
@@ -66,6 +67,7 @@ trainer = create_supervised_trainer(model, optimizer, loss_fn)
 evaluator = create_supervised_evaluator(model, metrics={'mse':Loss(loss_fn)})
 
 #add checkpoints
+checkpoint_dir = 'checkpoints'
 checkpointer = ModelCheckpoint(checkpoint_dir, 'wake_model_checkpoint', save_interval=250, 		create_dir=True)
 trainer.add_event_handler(Events.EPOCH_COMPLETED, checkpointer, {'mymodel':model})
 
