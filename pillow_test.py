@@ -29,12 +29,14 @@ test_cases = [
 	[0.010, -90]
 ]
 
+test_case_dir = os.path.join('data', 'test_data')
+
 with torch.no_grad():
-	for i, case in enumerate(test_cases):
+	for i, case in enumerate(os.listdir(test_case_dir)):
 		
-		case_dir = os.path.join(os.getcwd(), 'data', 'val_data', 'dTdz%.3f_z%d' % (case[0], case[1]))
-		
-		wake_pred = model(torch.Tensor(case).view(1, 1, 1, 2))
+		case_vals = [float(case[4:9]), float(case[-3:])]
+
+		wake_pred = model(torch.FloatTensor(case_vals).view(1, 1, 1, 2))
 		print(wake_pred)
 		print(wake_pred.size())
 		wake_pred = torch.squeeze(wake_pred)
@@ -42,7 +44,7 @@ with torch.no_grad():
 		print(wake_pred.size())
 		#print(wake_pred_squeezed.size())
 
-		wake_real = pd.read_csv(os.path.join(case_dir, 'Uy.csv'))
+		wake_real = pd.read_csv(os.path.join(test_case_dir, case, 'Uy.csv'))
 		wake_real_np = wake_real.values
 	
 		fig = plt.figure(i)
