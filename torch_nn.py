@@ -15,7 +15,7 @@ from torchvision import transforms, utils
 from torch.utils.data.dataset import random_split
 from wake_dataset import WakeDataset
 
-from ignite.engine import Events, create_supervised_trainer, create_supervised_evaluator
+from ignite.engine import ModelCheckpoint, Events, create_supervised_trainer, create_supervised_evaluator
 from ignite.metrics import Loss
 
 import visdom
@@ -59,10 +59,15 @@ lr = 1e-3
 optimizer = optim.Adam(model.parameters(), lr=lr)
 epochs = 1000
 log_interval = 100
+checkpoint_interval = 250
 
 #create trainer and evaluator
 trainer = create_supervised_trainer(model, optimizer, loss_fn)
 evaluator = create_supervised_evaluator(model, metrics={'mse':Loss(loss_fn)})
+
+#add checkpoints
+checkpointer = ModelCheckpoint(checkpoint_dir, 'wake_model_checkpoint', save_interval=250, 		create_dir=True)
+trainer.add_event_handler(Events.EPOCH_COMPLETED, checkpointer, {'mymodel':model})
 
 #create visdom plots
 vis = visdom.Visdom()
@@ -91,6 +96,14 @@ def log_training_results(engine):
 	print('Training - Epoch: {} Avg Loss: {:.6e}'.format(engine.state.epoch, avg_mse))
 	vis.line(X=np.array([engine.state.epoch]), Y=np.array([avg_mse]), 
 		win=train_avg_loss_window, update='append')
+	'''	
+	if engine.state.epoch % checkpoint_interval == 0:
+		torch.save({
+			'epoch': engine.state.epoch,
+			'model_state_dict': model.state_dict(),
+			'optimizer_state_dict': optimizer.state_dict(),
+			'loss': loss, 
+	'''
 
 @trainer.on(Events.EPOCH_COMPLETED)
 def log_validation_results(engine):
