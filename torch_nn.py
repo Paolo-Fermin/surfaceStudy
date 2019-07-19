@@ -57,7 +57,7 @@ loss_fn = nn.MSELoss()
 
 lr = 1e-3
 optimizer = optim.Adam(model.parameters(), lr=lr)
-epochs = 2000
+epochs = 1000
 log_interval = 100
 
 #create trainer and evaluator

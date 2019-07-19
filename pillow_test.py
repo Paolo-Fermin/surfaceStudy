@@ -23,13 +23,16 @@ model.eval()
 #test_dataloader = DataLoader(test_dataloader, batch_size=1, shuffle=True)
 
 test_cases = [
-	[0.010, -75],
-	[0.001, -75],
-	[0.010, -45]
+	[0.010, -30],
+	[0.001, -30],
+	[0.005, -30]
 ]
 
 with torch.no_grad():
-	for case in test_cases:
+	for i, case in enumerate(test_cases):
+		
+		case_dir = os.path.join(os.getcwd(), 'data', 'dTdz%.3f_z%d' % (case[0], case[1]))
+		
 		wake_pred = model(torch.Tensor(case).view(1, 1, 1, 2))
 		print(wake_pred)
 		print(wake_pred.size())
@@ -37,6 +40,19 @@ with torch.no_grad():
 		print(wake_pred)
 		print(wake_pred.size())
 		#print(wake_pred_squeezed.size())
+
+		wake_real = pd.read_csv(os.path.join(case_dir, 'Uy.csv'))
+		wake_real_np = wake_real.values
+	
+		fig = plt.figure(i)
+		fig.suptitle(str(case))
+
+		plt.subplot(2, 1, 1)
 		plt.pcolor(wake_pred)
 		plt.colorbar()
-		plt.show()
+
+		plt.subplot(2, 1, 2)
+		plt.pcolor(wake_real_np)
+		plt.colorbar()
+
+plt.show()
