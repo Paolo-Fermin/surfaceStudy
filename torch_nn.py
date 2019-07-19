@@ -46,7 +46,7 @@ model = nn.Sequential(
 print('cwd: ' + str(os.getcwd()))
 
 train_dataset = WakeDataset(os.path.join(os.getcwd(), 'data'))
-val_dataset = WakeDataset(os.path.join(os.getcwd(), 'data', 'test_data'))
+val_dataset = WakeDataset(os.path.join(os.getcwd(), 'data', 'val_data'))
 #train_dataset, val_dataset = random_split(wake_dataset, [7, 2])
 #print(len(wake_dataset))
 

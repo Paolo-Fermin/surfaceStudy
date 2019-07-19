@@ -42,7 +42,7 @@ class WakeDataset(Dataset):
 		#print(uy_data)
 
 		#convert data to tensor
-		self.uy_data_tensor = torch.FloatTensor(uy_data.values) * 1e9
+		self.uy_data_tensor = torch.FloatTensor(uy_data.values)
 		#print('Target size: ' + str(self.uy_data_tensor.size()))
 
 		return self.input_combos_tensor[index].view(1, 1, 2), self.uy_data_tensor.view(1, 128, 1024)

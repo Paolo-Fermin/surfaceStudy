@@ -12,10 +12,10 @@ from wake_model import WakeModel
 i = 0
 while (os.path.exists('wake_net_%d.pt' % i)):
 	i += 1
-
+i -= 1
 model = WakeModel()
 
-model.load_state_dict(torch.load('wake_net.pt'))
+model.load_state_dict(torch.load('wake_net_%d.pt' % i))
 #set to evaluation mode
 model.eval()
 
@@ -23,15 +23,16 @@ model.eval()
 #test_dataloader = DataLoader(test_dataloader, batch_size=1, shuffle=True)
 
 test_cases = [
-	[0.010, -30],
-	[0.001, -30],
-	[0.005, -30]
+	[0.001, -60],
+	[0.005, -90],
+	[0.010, -45],
+	[0.010, -90]
 ]
 
 with torch.no_grad():
 	for i, case in enumerate(test_cases):
 		
-		case_dir = os.path.join(os.getcwd(), 'data', 'dTdz%.3f_z%d' % (case[0], case[1]))
+		case_dir = os.path.join(os.getcwd(), 'data', 'val_data', 'dTdz%.3f_z%d' % (case[0], case[1]))
 		
 		wake_pred = model(torch.Tensor(case).view(1, 1, 1, 2))
 		print(wake_pred)
