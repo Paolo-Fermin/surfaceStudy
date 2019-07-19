@@ -3,3 +3,6 @@ basecaseBAK
 data/
 *.ipynb
 visdom_test.py
+checkpoints/
+*.pt
+*.pyc
