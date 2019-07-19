@@ -13,11 +13,13 @@ import matplotlib.pyplot as plt
 from torch.utils.data import DataLoader
 from torchvision import transforms, utils
 from torch.utils.data.dataset import random_split
+from torch.optim.lr_scheduler import MultiStepLR
 from wake_dataset import WakeDataset
 
 from ignite.engine import Events, create_supervised_trainer, create_supervised_evaluator
 from ignite.metrics import Loss
 from ignite.handlers import ModelCheckpoint
+from ignite.contrib.handlers.param_scheduler import LRScheduler
 
 import visdom
 
@@ -56,10 +58,10 @@ val_loader = DataLoader(dataset=val_dataset, batch_size=1, shuffle=True)
 
 loss_fn = nn.MSELoss()
 
-lr = 1e-3
-optimizer = optim.Adam(model.parameters(), lr=lr)
-epochs = 1000
-log_interval = 100
+lr = 1e-4
+optimizer = optim.Adam(model.parameters(), lr=lr, betas=(0.5, 0.999))
+epochs = 100000
+log_interval = 1000
 checkpoint_interval = 250
 
 #create trainer and evaluator
@@ -70,6 +72,12 @@ evaluator = create_supervised_evaluator(model, metrics={'mse':Loss(loss_fn)})
 checkpoint_dir = 'checkpoints'
 checkpointer = ModelCheckpoint(checkpoint_dir, 'wake_model_checkpoint', save_interval=250, 		create_dir=True)
 trainer.add_event_handler(Events.EPOCH_COMPLETED, checkpointer, {'mymodel':model})
+
+#add learning rate scheduler
+step_scheduler = MultiStepLR(optimizer, milestones=(10000, 75000))
+#wrap in ignite class
+scheduler = LRScheduler(step_scheduler)
+trainer.add_event_handler(Events.EPOCH_COMPLETED, scheduler)
 
 #create visdom plots
 vis = visdom.Visdom()
@@ -86,9 +94,9 @@ def log_training_loss(engine):
 	iter = (engine.state.iteration - 1) % len(train_loader) + 1
 	if iter % log_interval == 0:
 		print('Epoch [{}] Loss: {:.6e}'.format(engine.state.epoch, engine.state.output))
-		vis.line(X=np.array([engine.state.iteration]),
-			 Y=np.array([engine.state.output]),
-			 update='append', win=train_loss_window)
+		#vis.line(X=np.array([engine.state.iteration]),
+			 #Y=np.array([engine.state.output]),
+			 #update='append', win=train_loss_window)
 
 @trainer.on(Events.EPOCH_COMPLETED)
 def log_training_results(engine): 
