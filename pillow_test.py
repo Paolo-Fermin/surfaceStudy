@@ -1,36 +1,42 @@
 import torch
 import torch.nn as nn
 import os
+import pandas as pd
+import matplotlib.pyplot as plt
+
+from torch.utils.data import DataLoader
+from wake_dataset import WakeDataset
+from wake_model import WakeModel
 
 #load the most recent model
 i = 0
 while (os.path.exists('wake_net_%d.pt' % i)):
 	i += 1
 
-
-model = nn.Sequential(
-	nn.ConvTranspose2d(1, 256, kernel_size=(1, 7), stride=1, padding=0),
-	nn.PReLU(),
-	nn.InstanceNorm2d(1),
-	nn.ConvTranspose2d(256, 128, kernel_size=(4, 4), stride=2, padding=1),
-	nn.PReLU(),
-	nn.ConvTranspose2d(128, 64, kernel_size=(4, 4), stride=2, padding=1),
-	nn.PReLU(),
-	nn.ConvTranspose2d(64, 32, kernel_size=(4, 4), stride=2, padding=1),
-	nn.PReLU(),
-	nn.ConvTranspose2d(32, 16, kernel_size=(4, 4), stride=2, padding=1),
-	nn.PReLU(),	
-	nn.ConvTranspose2d(16, 8, kernel_size=(4, 4), stride=2, padding=1),
-	nn.PReLU(),
-	nn.ConvTranspose2d(8, 4, kernel_size=(4, 4), stride=2, padding=1),	
-	nn.PReLU(),		
-	nn.ConvTranspose2d(4, 1, kernel_size=(4, 4), stride=2, padding=1),
-	nn.Tanh()
-)
+model = WakeModel()
 
 model.load_state_dict(torch.load('wake_net.pt'))
 #set to evaluation mode
 model.eval()
 
+#test_dataset = WakeDataset(os.path.join(os.getcwd(), 'data'))
+#test_dataloader = DataLoader(test_dataloader, batch_size=1, shuffle=True)
 
-print(model)
+test_cases = [
+	[0.010, -75],
+	[0.001, -75],
+	[0.010, -45]
+]
+
+with torch.no_grad():
+	for case in test_cases:
+		wake_pred = model(torch.Tensor(case).view(1, 1, 1, 2))
+		print(wake_pred)
+		print(wake_pred.size())
+		wake_pred = torch.squeeze(wake_pred)
+		print(wake_pred)
+		print(wake_pred.size())
+		#print(wake_pred_squeezed.size())
+		plt.pcolor(wake_pred)
+		plt.colorbar()
+		plt.show()
