@@ -14,6 +14,8 @@ from torch.utils.data import DataLoader
 from torchvision import transforms, utils
 from torch.utils.data.dataset import random_split
 from torch.optim.lr_scheduler import MultiStepLR
+
+from wake_model import WakeModel
 from wake_dataset import WakeDataset
 
 from ignite.engine import Events, create_supervised_trainer, create_supervised_evaluator
@@ -25,25 +27,7 @@ import visdom
 
 torch.manual_seed(8)
 
-model = nn.Sequential(
-	nn.ConvTranspose2d(1, 256, kernel_size=(1, 7), stride=1, padding=0),
-	nn.PReLU(),
-	nn.InstanceNorm2d(1),
-	nn.ConvTranspose2d(256, 128, kernel_size=(4, 4), stride=2, padding=1),
-	nn.PReLU(),
-	nn.ConvTranspose2d(128, 64, kernel_size=(4, 4), stride=2, padding=1),
-	nn.PReLU(),
-	nn.ConvTranspose2d(64, 32, kernel_size=(4, 4), stride=2, padding=1),
-	nn.PReLU(),
-	nn.ConvTranspose2d(32, 16, kernel_size=(4, 4), stride=2, padding=1),
-	nn.PReLU(),	
-	nn.ConvTranspose2d(16, 8, kernel_size=(4, 4), stride=2, padding=1),
-	nn.PReLU(),
-	nn.ConvTranspose2d(8, 4, kernel_size=(4, 4), stride=2, padding=1),	
-	nn.PReLU(),		
-	nn.ConvTranspose2d(4, 1, kernel_size=(4, 4), stride=2, padding=1),
-	nn.Tanh()
-)
+model = WakeModel()
 
 print('cwd: ' + str(os.getcwd()))
 
@@ -60,8 +44,8 @@ loss_fn = nn.MSELoss()
 
 lr = 1e-4
 optimizer = optim.Adam(model.parameters(), lr=lr, betas=(0.5, 0.999))
-epochs = 100000
-log_interval = 1000
+epochs = 1000
+log_interval = 10
 checkpoint_interval = 250
 
 #create trainer and evaluator
@@ -70,7 +54,7 @@ evaluator = create_supervised_evaluator(model, metrics={'mse':Loss(loss_fn)})
 
 #add checkpoints
 checkpoint_dir = 'checkpoints'
-checkpointer = ModelCheckpoint(checkpoint_dir, 'wake_model_checkpoint', save_interval=250, 		create_dir=True)
+checkpointer = ModelCheckpoint(checkpoint_dir, 'wake_model_checkpoint', save_interval=250, 		create_dir=True, require_empty=False)
 trainer.add_event_handler(Events.EPOCH_COMPLETED, checkpointer, {'mymodel':model})
 
 #add learning rate scheduler
@@ -106,14 +90,6 @@ def log_training_results(engine):
 	print('Training - Epoch: {} Avg Loss: {:.6e}'.format(engine.state.epoch, avg_mse))
 	vis.line(X=np.array([engine.state.epoch]), Y=np.array([avg_mse]), 
 		win=train_avg_loss_window, update='append')
-	'''	
-	if engine.state.epoch % checkpoint_interval == 0:
-		torch.save({
-			'epoch': engine.state.epoch,
-			'model_state_dict': model.state_dict(),
-			'optimizer_state_dict': optimizer.state_dict(),
-			'loss': loss, 
-	'''
 
 @trainer.on(Events.EPOCH_COMPLETED)
 def log_validation_results(engine):
