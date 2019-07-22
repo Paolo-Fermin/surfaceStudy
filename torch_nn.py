@@ -35,7 +35,7 @@ val_loader = DataLoader(dataset=val_dataset, batch_size=1, shuffle=True)
 
 loss_fn = nn.MSELoss()
 
-lr = 1e-4
+lr = 1e-3
 optimizer = optim.Adam(model.parameters(), lr=lr, betas=(0.5, 0.999))
 epochs = 1000
 log_interval = 1
@@ -43,14 +43,14 @@ checkpoint_interval = 250
 
 
 #add learning rate scheduler
-step_scheduler = MultiStepLR(optimizer, milestones=(epochs * .3, epochs * .75))
+step_scheduler = MultiStepLR(optimizer, milestones=(epochs * .3, epochs * .6, epochs * .9))
 
 #create visdom plots
 vis = visdom.Visdom()
 def create_plot_window(vis, xlabel, ylabel, title):
 	return vis.line(X=np.array([1]), Y=np.array([np.nan]), opts=dict(xlabel=xlabel, ylabel=ylabel, title=title))
 
-train_loss_window = create_plot_window(vis, '#Iterations', 'Loss', 'Training Loss')
+#train_loss_window = create_plot_window(vis, '#Iterations', 'Loss', 'Training Loss')
 train_avg_loss_window = create_plot_window(vis, '#Epochs', 'Loss', 'Training Avg Loss')
 val_avg_loss_window = create_plot_window(vis, '#Epochs', 'Loss', 'Validation Avg Loss')
 
@@ -97,7 +97,7 @@ for epoch in range(epochs):
 			model.eval()
 				
 			y_pred = model(x_val)
-			val_loss = loss_fn(y_val, y_pred)
+			val_loss = loss_fn(y_pred, y_val)
 		
 			#print stats
 			running_val_loss += loss.item()
