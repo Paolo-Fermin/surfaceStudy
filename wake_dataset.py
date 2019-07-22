@@ -52,6 +52,6 @@ class WakeDataset(Dataset):
 		return newMin + (((tensor - torch.min(tensor)) * (newMax - newMin)) / (torch.max(tensor) - torch.min(tensor)))
 
 	def crop(self, df):
-		df.drop(df.columns[-len(df.columns)/2:], axis=1, inplace=True)
+		df.drop(df.columns[-(len(df.columns) - 512):], axis=1, inplace=True)
 		return df
 
