@@ -39,7 +39,7 @@ loss_fn = nn.MSELoss()
 
 lr = 1e-4
 optimizer = optim.Adam(model.parameters(), lr=lr, betas=(0.5, 0.999))
-epochs = 25
+epochs = 100
 log_interval = 1
 
 #add learning rate scheduler
