@@ -14,41 +14,18 @@ from torch.utils.data import DataLoader
 from torchvision import transforms, utils
 from torch.utils.data.dataset import random_split
 from torch.optim.lr_scheduler import MultiStepLR
-from wake_dataset import WakeDataset
 
-from ignite.engine import Events, create_supervised_trainer, create_supervised_evaluator
-from ignite.metrics import Loss
-from ignite.handlers import ModelCheckpoint
-from ignite.contrib.handlers.param_scheduler import LRScheduler
+from wake_model import WakeModel
+from wake_dataset import WakeDataset
 
 import visdom
 
 torch.manual_seed(8)
 
-model = nn.Sequential(
-	nn.ConvTranspose2d(1, 256, kernel_size=(1, 7), stride=1, padding=0),
-	nn.PReLU(),
-	nn.InstanceNorm2d(1),
-	nn.ConvTranspose2d(256, 128, kernel_size=(4, 4), stride=2, padding=1),
-	nn.PReLU(),
-	nn.ConvTranspose2d(128, 64, kernel_size=(4, 4), stride=2, padding=1),
-	nn.PReLU(),
-	nn.ConvTranspose2d(64, 32, kernel_size=(4, 4), stride=2, padding=1),
-	nn.PReLU(),
-	nn.ConvTranspose2d(32, 16, kernel_size=(4, 4), stride=2, padding=1),
-	nn.PReLU(),	
-	nn.ConvTranspose2d(16, 8, kernel_size=(4, 4), stride=2, padding=1),
-	nn.PReLU(),
-	nn.ConvTranspose2d(8, 4, kernel_size=(4, 4), stride=2, padding=1),	
-	nn.PReLU(),		
-	nn.ConvTranspose2d(4, 1, kernel_size=(4, 4), stride=2, padding=1),
-	nn.Tanh()
-)
+model = WakeModel()
 
-print('cwd: ' + str(os.getcwd()))
-
-train_dataset = WakeDataset(os.path.join(os.getcwd(), 'data'))
-val_dataset = WakeDataset(os.path.join(os.getcwd(), 'data', 'val_data'))
+train_dataset = WakeDataset(os.path.join(os.getcwd(), 'data'), transform=True)
+val_dataset = WakeDataset(os.path.join(os.getcwd(), 'data', 'val_data'), transform=True)
 #train_dataset, val_dataset = random_split(wake_dataset, [7, 2])
 #print(len(wake_dataset))
 
@@ -60,24 +37,13 @@ loss_fn = nn.MSELoss()
 
 lr = 1e-4
 optimizer = optim.Adam(model.parameters(), lr=lr, betas=(0.5, 0.999))
-epochs = 100000
-log_interval = 1000
+epochs = 5000
+log_interval = 9
 checkpoint_interval = 250
 
-#create trainer and evaluator
-trainer = create_supervised_trainer(model, optimizer, loss_fn)
-evaluator = create_supervised_evaluator(model, metrics={'mse':Loss(loss_fn)})
-
-#add checkpoints
-checkpoint_dir = 'checkpoints'
-checkpointer = ModelCheckpoint(checkpoint_dir, 'wake_model_checkpoint', save_interval=250, 		create_dir=True)
-trainer.add_event_handler(Events.EPOCH_COMPLETED, checkpointer, {'mymodel':model})
 
 #add learning rate scheduler
 step_scheduler = MultiStepLR(optimizer, milestones=(10000, 75000))
-#wrap in ignite class
-scheduler = LRScheduler(step_scheduler)
-trainer.add_event_handler(Events.EPOCH_COMPLETED, scheduler)
 
 #create visdom plots
 vis = visdom.Visdom()
@@ -88,44 +54,58 @@ train_loss_window = create_plot_window(vis, '#Iterations', 'Loss', 'Training Los
 train_avg_loss_window = create_plot_window(vis, '#Iterations', 'Loss', 'Training Avg Loss')
 val_avg_loss_window = create_plot_window(vis, '#Epochs', 'Loss', 'Validation Avg Loss')
 
-#event handlers
-@trainer.on(Events.ITERATION_COMPLETED)
-def log_training_loss(engine):
-	iter = (engine.state.iteration - 1) % len(train_loader) + 1
-	if iter % log_interval == 0:
-		print('Epoch [{}] Loss: {:.6e}'.format(engine.state.epoch, engine.state.output))
-		#vis.line(X=np.array([engine.state.iteration]),
-			 #Y=np.array([engine.state.output]),
-			 #update='append', win=train_loss_window)
+#training loop
+for epoch in range(epochs):
 
-@trainer.on(Events.EPOCH_COMPLETED)
-def log_training_results(engine): 
-	evaluator.run(train_loader)
-	metrics = evaluator.state.metrics
-	avg_mse = metrics['mse']
-	print('Training - Epoch: {} Avg Loss: {:.6e}'.format(engine.state.epoch, avg_mse))
-	vis.line(X=np.array([engine.state.epoch]), Y=np.array([avg_mse]), 
-		win=train_avg_loss_window, update='append')
-	'''	
-	if engine.state.epoch % checkpoint_interval == 0:
-		torch.save({
-			'epoch': engine.state.epoch,
-			'model_state_dict': model.state_dict(),
-			'optimizer_state_dict': optimizer.state_dict(),
-			'loss': loss, 
-	'''
+	running_loss = 0.0
+	running_val_loss = 0.0
+	for x_batch, y_batch in train_loader:
+		#set model to training mode
+		model.train()	
 
-@trainer.on(Events.EPOCH_COMPLETED)
-def log_validation_results(engine):
-	evaluator.run(val_loader)
-	metrics = evaluator.state.metrics
-	avg_mse = metrics['mse']
-	print('Validation - Epoch: {} Avg Loss: {:.6e}\n'.format(engine.state.epoch, avg_mse))
-	vis.line(X=np.array([engine.state.epoch]), Y=np.array([avg_mse]), 
-		win=val_avg_loss_window, update='append')
+		#zero grads
+		optimizer.zero_grad()
+		#forward pass
+		y_pred = model(x_batch)
+		#compute loss		
+		loss = loss_fn(y_batch, y_pred)
+		#compute gradients
+		loss.backward()
+		#update params and zero grads
+		optimizer.step()
+		
+		#print stats
+		running_loss += loss.item()
+		if epoch % log_interval == log_interval - 1:
+			avg_mse = running_loss / log_interval
+			print('Training - Epoch: {} Avg Loss: {:.6e}'.format(epoch, avg_mse))
+			vis.line(X=np.array([epoch]), Y=np.array([avg_mse]), 
+				win=train_avg_loss_window, update='append')
+			running_loss = 0.0
+			print('Elapsed time: ' + str(datetime.now() - start_time))
+	
+	vis.line(X=np.array([epoch]), Y=np.array([loss.item()]), win=train_loss_window, update='append')	
+		
+	with torch.no_grad():	
+		for x_val, y_val in val_loader:
+			
+			#set model to evaluation mode
+			model.eval()
+				
+			y_pred = model(x_val)
+			val_loss = loss_fn(y_val, y_pred)
+		
+			#print stats
+			running_val_loss += loss.item()
+			if epoch % log_interval == log_interval - 1:
+				avg_mse = running_val_loss / log_interval
+				print('Validation - Epoch: {} Avg Loss: {:.6e}\n'.format(epoch, avg_mse))
+				vis.line(X=np.array([epoch]), Y=np.array([avg_mse]), 
+					win=val_avg_loss_window, update='append')
+				running_val_loss = 0.0
+				print('Elapsed time: ' + str(datetime.now() - start_time))
 
-#run training
-trainer.run(train_loader, max_epochs=epochs)
+	step_scheduler.step()
 
 #save model to a new file
 i = 0
