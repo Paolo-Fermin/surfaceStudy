@@ -49,13 +49,13 @@ class WakeDataset(Dataset):
 
 		#tranform image
 		if self.transform:
-			uy_data_tensor = self.rescale(uy_data_tensor)
+			uy_data_tensor = self.rescale(uy_data_tensor, -1, 1)
 
-		print(uy_data_tensor)
+		#print(uy_data_tensor)
 		
 		return self.input_combos_tensor[index].view(1, 1, 2), uy_data_tensor.view(1, 128, 1024)
 
-	def rescale(tensor, newMin, newMax): 	
+	def rescale(self, tensor, newMin, newMax): 	
 		return newMin + (((tensor - torch.min(tensor)) * (newMax - newMin)) / (torch.max(tensor) - torch.min(tensor)))
 
 

@@ -24,12 +24,8 @@ torch.manual_seed(8)
 
 model = WakeModel()
 
-transform = transforms.Compose([
-	transforms.Normalize([0.5], [0.5])
-])
-
-train_dataset = WakeDataset(os.path.join(os.getcwd(), 'data'), transform=transform)
-val_dataset = WakeDataset(os.path.join(os.getcwd(), 'data', 'val_data'), transform=transform)
+train_dataset = WakeDataset(os.path.join(os.getcwd(), 'data'), transform=True)
+val_dataset = WakeDataset(os.path.join(os.getcwd(), 'data', 'val_data'), transform=True)
 #train_dataset, val_dataset = random_split(wake_dataset, [7, 2])
 #print(len(wake_dataset))
 
