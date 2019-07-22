@@ -5,7 +5,7 @@ start_time = datetime.now()
 import os
 import torch
 import torch.nn as nn
-import torch.functional as F
+import torch.nn.functional as F
 import torch.optim as optim
 import pandas as pd
 import numpy as np
@@ -42,10 +42,10 @@ val_loader = DataLoader(dataset=val_dataset, batch_size=1, shuffle=True)
 
 loss_fn = nn.MSELoss()
 
-lr = 1e-4
+lr = 1e-3
 optimizer = optim.Adam(model.parameters(), lr=lr, betas=(0.5, 0.999))
 epochs = 1000
-log_interval = 10
+log_interval = 1
 checkpoint_interval = 250
 
 #create trainer and evaluator
@@ -58,50 +58,84 @@ checkpointer = ModelCheckpoint(checkpoint_dir, 'wake_model_checkpoint', save_int
 trainer.add_event_handler(Events.EPOCH_COMPLETED, checkpointer, {'mymodel':model})
 
 #add learning rate scheduler
-step_scheduler = MultiStepLR(optimizer, milestones=(10000, 75000))
-#wrap in ignite class
-scheduler = LRScheduler(step_scheduler)
-trainer.add_event_handler(Events.EPOCH_COMPLETED, scheduler)
+step_scheduler = MultiStepLR(optimizer, milestones=(epochs * .3, epochs * .6, epochs * .9))
 
 #create visdom plots
 vis = visdom.Visdom()
 def create_plot_window(vis, xlabel, ylabel, title):
 	return vis.line(X=np.array([1]), Y=np.array([np.nan]), opts=dict(xlabel=xlabel, ylabel=ylabel, title=title))
 
-train_loss_window = create_plot_window(vis, '#Iterations', 'Loss', 'Training Loss')
-train_avg_loss_window = create_plot_window(vis, '#Iterations', 'Loss', 'Training Avg Loss')
+#train_loss_window = create_plot_window(vis, '#Iterations', 'Loss', 'Training Loss')
+train_avg_loss_window = create_plot_window(vis, '#Epochs', 'Loss', 'Training Avg Loss')
 val_avg_loss_window = create_plot_window(vis, '#Epochs', 'Loss', 'Validation Avg Loss')
 
-#event handlers
-@trainer.on(Events.ITERATION_COMPLETED)
-def log_training_loss(engine):
-	iter = (engine.state.iteration - 1) % len(train_loader) + 1
-	if iter % log_interval == 0:
-		print('Epoch [{}] Loss: {:.6e}'.format(engine.state.epoch, engine.state.output))
-		#vis.line(X=np.array([engine.state.iteration]),
-			 #Y=np.array([engine.state.output]),
-			 #update='append', win=train_loss_window)
+total_iterations = 0
 
-@trainer.on(Events.EPOCH_COMPLETED)
-def log_training_results(engine): 
-	evaluator.run(train_loader)
-	metrics = evaluator.state.metrics
-	avg_mse = metrics['mse']
-	print('Training - Epoch: {} Avg Loss: {:.6e}'.format(engine.state.epoch, avg_mse))
-	vis.line(X=np.array([engine.state.epoch]), Y=np.array([avg_mse]), 
-		win=train_avg_loss_window, update='append')
+#training loop
+for epoch in range(epochs):
 
-@trainer.on(Events.EPOCH_COMPLETED)
-def log_validation_results(engine):
-	evaluator.run(val_loader)
-	metrics = evaluator.state.metrics
-	avg_mse = metrics['mse']
-	print('Validation - Epoch: {} Avg Loss: {:.6e}\n'.format(engine.state.epoch, avg_mse))
-	vis.line(X=np.array([engine.state.epoch]), Y=np.array([avg_mse]), 
-		win=val_avg_loss_window, update='append')
+	running_loss = 0.0
+	running_val_loss = 0.0
+	train_iterations = 0.0 
+	val_iterations = 0.0
+	for x_batch, y_batch in train_loader:
+		#set model to training mode
+		model.train()	
+		
+		total_iterations += 1
+		train_iterations += 1	
+	
+		#zero grads
+		optimizer.zero_grad()
+		#forward pass
+		y_pred = model(x_batch)
+		#compute loss		
+		loss = loss_fn(y_pred, y_batch)
+		
+		running_loss += loss.item()		
+		#print(loss.item())
+		#compute gradients
+		loss.backward()
+		#update params and zero grads
+		optimizer.step()
 
-#run training
-trainer.run(train_loader, max_epochs=epochs)
+		#print stats
+	
+		#vis.line(X=np.array([total_iterations]), Y=np.array([loss.item()]), win=train_loss_window, update='append')	
+
+	with torch.no_grad():	
+		for x_val, y_val in val_loader:
+	
+			val_iterations += 1			
+
+			#set model to evaluation mode
+			model.eval()
+				
+			y_pred = model(x_val)
+			val_loss = loss_fn(y_pred, y_val)
+		
+			#print stats
+			running_val_loss += loss.item()
+
+
+	if epoch % log_interval == log_interval - 1:
+	
+		avg_train_loss = running_loss / train_iterations
+		print('Training - Epoch: {} Avg Loss: {:.6e}'.format(epoch, avg_train_loss))
+		vis.line(X=np.array([epoch]), Y=np.array([avg_train_loss]), 
+			win=train_avg_loss_window, update='append')
+		running_loss = 0.0
+		train_iterations = 0.0
+		
+		avg_val_loss = running_val_loss / val_iterations
+		print('Validation - Epoch: {} Avg Loss: {:.6e}\n'.format(epoch, avg_val_loss))
+		vis.line(X=np.array([epoch]), Y=np.array([avg_val_loss]), 
+			win=val_avg_loss_window, update='append')
+		running_val_loss = 0.0
+		val_iterations = 0.0
+		print('Elapsed time: ' + str(datetime.now() - start_time))
+
+	step_scheduler.step()
 
 #save model to a new file
 i = 0
