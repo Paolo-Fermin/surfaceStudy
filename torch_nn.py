@@ -37,9 +37,9 @@ val_loader = DataLoader(dataset=val_dataset, batch_size=1, shuffle=True)
 
 loss_fn = nn.MSELoss()
 
-lr = 1e-4
+lr = 1e-3
 optimizer = optim.Adam(model.parameters(), lr=lr, betas=(0.5, 0.999))
-epochs = 25
+epochs = 32000
 log_interval = 1
 
 #add learning rate scheduler
