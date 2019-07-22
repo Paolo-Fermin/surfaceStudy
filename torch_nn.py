@@ -18,11 +18,6 @@ from torch.optim.lr_scheduler import MultiStepLR
 from wake_model import WakeModel
 from wake_dataset import WakeDataset
 
-from ignite.engine import Events, create_supervised_trainer, create_supervised_evaluator
-from ignite.metrics import Loss
-from ignite.handlers import ModelCheckpoint
-from ignite.contrib.handlers.param_scheduler import LRScheduler
-
 import visdom
 
 torch.manual_seed(8)
@@ -42,20 +37,10 @@ val_loader = DataLoader(dataset=val_dataset, batch_size=1, shuffle=True)
 
 loss_fn = nn.MSELoss()
 
-lr = 1e-3
+lr = 1e-4
 optimizer = optim.Adam(model.parameters(), lr=lr, betas=(0.5, 0.999))
-epochs = 1000
+epochs = 25
 log_interval = 1
-checkpoint_interval = 250
-
-#create trainer and evaluator
-trainer = create_supervised_trainer(model, optimizer, loss_fn)
-evaluator = create_supervised_evaluator(model, metrics={'mse':Loss(loss_fn)})
-
-#add checkpoints
-checkpoint_dir = 'checkpoints'
-checkpointer = ModelCheckpoint(checkpoint_dir, 'wake_model_checkpoint', save_interval=250, 		create_dir=True, require_empty=False)
-trainer.add_event_handler(Events.EPOCH_COMPLETED, checkpointer, {'mymodel':model})
 
 #add learning rate scheduler
 step_scheduler = MultiStepLR(optimizer, milestones=(epochs * .3, epochs * .6, epochs * .9))
