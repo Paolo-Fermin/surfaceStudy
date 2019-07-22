@@ -26,8 +26,8 @@ model = WakeModel()
 
 print('cwd: ' + str(os.getcwd()))
 
-train_dataset = WakeDataset(os.path.join(os.getcwd(), 'data'))
-val_dataset = WakeDataset(os.path.join(os.getcwd(), 'data', 'val_data'))
+train_dataset = WakeDataset(os.path.join(os.getcwd(), 'data'), transform=True)
+val_dataset = WakeDataset(os.path.join(os.getcwd(), 'data', 'val_data'), transform=True)
 #train_dataset, val_dataset = random_split(wake_dataset, [7, 2])
 #print(len(wake_dataset))
 
