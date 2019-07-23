@@ -3,6 +3,7 @@ import torch.nn as nn
 import os
 import pandas as pd
 import matplotlib.pyplot as plt
+import argparse
 
 from torch.utils.data import DataLoader
 from wake_dataset import WakeDataset
@@ -10,26 +11,30 @@ from wake_model import WakeModel
 
 #load the most recent model
 i = 0
-while (os.path.exists('wake_net_%d.pt' % i)):
+while (os.path.exists('./logs/wake_net_%d' % i)):
 	i += 1
 i -= 1
 model = WakeModel()
 
-model.load_state_dict(torch.load('wake_net_%d.pt' % i))
+parser = argparse.ArgumentParser()
+parser.add_argument('--num', help='specify which model number to test')
+parser.add_argument('--crop', help='specify whether to crop real image for comparison', action='store_true')
+args = parser.parse_args()
+if args.num:
+	i = int(args.num)
+
+try:
+	model.load_state_dict(torch.load('./logs/wake_net_%d/wake_net_%d_dict.pt' % (i, i)))
+except RuntimeError: 
+	model = torch.load('./logs/wake_net_%d/wake_net_%d_model.pt' % (i, i))
 #set to evaluation mode
 model.eval()
 
-#test_dataset = WakeDataset(os.path.join(os.getcwd(), 'data'))
-#test_dataloader = DataLoader(test_dataloader, batch_size=1, shuffle=True)
-
-test_cases = [
-	[0.001, -60],
-	[0.005, -90],
-	[0.010, -45],
-	[0.010, -90]
-]
-
 test_case_dir = os.path.join('data', 'test_data')
+
+def crop(df):
+	df.drop(df.columns[-(len(df.columns) - 512):], axis=1, inplace=True)
+	return df
 
 with torch.no_grad():
 	for i, case in enumerate(os.listdir(test_case_dir)):
@@ -45,6 +50,9 @@ with torch.no_grad():
 		#print(wake_pred_squeezed.size())
 
 		wake_real = pd.read_csv(os.path.join(test_case_dir, case, 'Uy.csv'))
+		if args.crop:
+			wake_real = crop(wake_real)
+		
 		wake_real_np = wake_real.values
 	
 		fig = plt.figure(i)
