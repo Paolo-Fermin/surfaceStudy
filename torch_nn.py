@@ -57,7 +57,7 @@ loss_fn = nn.MSELoss()
 
 lr = 1e-3
 optimizer = optim.Adam(model.parameters(), lr=lr, betas=(0.5, 0.999))
-epochs = 3000
+epochs = 32000
 log_interval = 1
 
 logging.info('loss: {}'.format(loss_fn))
