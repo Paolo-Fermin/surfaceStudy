@@ -19,12 +19,30 @@ from wake_model import WakeModel
 from wake_dataset import WakeDataset
 
 import visdom
+import logging
+from torchsummary import summary
+
+from utils import set_logger
+
+#get index of most recent model name to save to new file
+
+i = 0
+while os.path.exists(os.path.join(os.getcwd(), 'logs', 'wake_net_%d' %i)):
+	i += 1
+model_name = 'wake_net_%d' % i
+logdir = os.path.join(os.getcwd(), 'logs', model_name)
+os.mkdir(logdir)
+set_logger(os.path.join(logdir, model_name + str('_training.log')))
 
 torch.manual_seed(8)
 
 model = WakeModel()
 
-print('cwd: ' + str(os.getcwd()))
+logging.info('cwd: ' + str(os.getcwd()))
+
+#log model architecture
+#logging.info(summary(model, (1, 1, 2)))
+summary(model, (1, 1, 2))
 
 train_dataset = WakeDataset(os.path.join(os.getcwd(), 'data'), transform=True)
 val_dataset = WakeDataset(os.path.join(os.getcwd(), 'data', 'val_data'), transform=True)
@@ -39,8 +57,12 @@ loss_fn = nn.MSELoss()
 
 lr = 1e-3
 optimizer = optim.Adam(model.parameters(), lr=lr, betas=(0.5, 0.999))
-epochs = 32000
+epochs = 1000
 log_interval = 1
+
+logging.info('loss: {}'.format(loss_fn))
+logging.info('starting lr: {}'.format(lr))
+logging.info('epochs: {}'.format(epochs))
 
 #add learning rate scheduler
 step_scheduler = MultiStepLR(optimizer, milestones=(epochs * .3, epochs * .6, epochs * .9))
@@ -51,8 +73,8 @@ def create_plot_window(vis, xlabel, ylabel, title):
 	return vis.line(X=np.array([1]), Y=np.array([np.nan]), opts=dict(xlabel=xlabel, ylabel=ylabel, title=title))
 
 #train_loss_window = create_plot_window(vis, '#Iterations', 'Loss', 'Training Loss')
-train_avg_loss_window = create_plot_window(vis, '#Epochs', 'Loss', 'Training Avg Loss')
-val_avg_loss_window = create_plot_window(vis, '#Epochs', 'Loss', 'Validation Avg Loss')
+train_avg_loss_window = create_plot_window(vis, '#Epochs', 'Loss', 'Training Avg Loss - %s' % model_name)
+val_avg_loss_window = create_plot_window(vis, '#Epochs', 'Loss', 'Validation Avg Loss - %s' % model_name)
 
 total_iterations = 0
 
@@ -106,19 +128,19 @@ for epoch in range(epochs):
 	if epoch % log_interval == log_interval - 1:
 	
 		avg_train_loss = running_loss / train_iterations
-		print('Training - Epoch: {} Avg Loss: {:.6e}'.format(epoch, avg_train_loss))
+		logging.info('Training - Epoch: {} Avg Loss: {:.6e}'.format(epoch, avg_train_loss))
 		vis.line(X=np.array([epoch]), Y=np.array([avg_train_loss]), 
 			win=train_avg_loss_window, update='append')
 		running_loss = 0.0
 		train_iterations = 0.0
 		
 		avg_val_loss = running_val_loss / val_iterations
-		print('Validation - Epoch: {} Avg Loss: {:.6e}\n'.format(epoch, avg_val_loss))
+		logging.info('Validation - Epoch: {} Avg Loss: {:.6e}\n'.format(epoch, avg_val_loss))
 		vis.line(X=np.array([epoch]), Y=np.array([avg_val_loss]), 
 			win=val_avg_loss_window, update='append')
 		running_val_loss = 0.0
 		val_iterations = 0.0
-		print('Elapsed time: ' + str(datetime.now() - start_time))
+		logging.info('Elapsed time: ' + str(datetime.now() - start_time))
 
 	step_scheduler.step()
 
@@ -126,11 +148,13 @@ for epoch in range(epochs):
 i = 0
 while os.path.exists('./wake_net_%d.pt' % i):
 	i += 1
-print('Saving model...')
-torch.save(model.state_dict(), 'wake_net_%d.pt' % i)
-print('Model saved')
+logging.info('Saving state dict...')
+torch.save(model.state_dict(), os.path.join(logdir, model_name + '_dict.pt'))
+logging.info('State dict saved')
 
-print('Finished training')
-print('Execution time: ' + str(datetime.now() - start_time))
+torch.save(model, os.path.join(logdir, model_name + '_model.pt'))
+
+logging.info('Finished training')
+logging.info('Execution time: ' + str(datetime.now() - start_time))
 
 		
