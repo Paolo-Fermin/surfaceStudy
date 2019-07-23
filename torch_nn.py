@@ -57,7 +57,7 @@ loss_fn = nn.MSELoss()
 
 lr = 1e-3
 optimizer = optim.Adam(model.parameters(), lr=lr, betas=(0.5, 0.999))
-epochs = 1000
+epochs = 3000
 log_interval = 1
 
 logging.info('loss: {}'.format(loss_fn))
@@ -145,9 +145,6 @@ for epoch in range(epochs):
 	step_scheduler.step()
 
 #save model to a new file
-i = 0
-while os.path.exists('./wake_net_%d.pt' % i):
-	i += 1
 logging.info('Saving state dict...')
 torch.save(model.state_dict(), os.path.join(logdir, model_name + '_dict.pt'))
 logging.info('State dict saved')
