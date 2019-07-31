@@ -27,7 +27,7 @@ start_time = datetime.now()
 #parse command line args
 parser = argparse.ArgumentParser()
 parser.add_argument('--epochs', help='Specify the number of epochs for training')
-parser.add_argument('--crop', help='Boolean: whether to crop data by half (default False)')
+parser.add_argument('--crop', help='Boolean: whether to crop data by half (default False)', action='store_true')
 args = parser.parse_args()
 if args.epochs:
 	epochs = int(args.epochs)
@@ -60,7 +60,6 @@ else:
 #logging.info(summary(model, (1, 1, 2)))
 summary(model, (1, 1, 2))
 
-
 train_dataset = WakeDataset(os.path.join(os.getcwd(), 'data'), transform=crop)
 val_dataset = WakeDataset(os.path.join(os.getcwd(), 'data', 'val_data'), transform=crop)
 #train_dataset, val_dataset = random_split(wake_dataset, [7, 2])
@@ -87,7 +86,6 @@ vis = visdom.Visdom()
 def create_plot_window(vis, xlabel, ylabel, title):
 	return vis.line(X=np.array([1]), Y=np.array([np.nan]), opts=dict(xlabel=xlabel, ylabel=ylabel, title=title))
 
-#train_loss_window = create_plot_window(vis, '#Iterations', 'Loss', 'Training Loss')
 train_avg_loss_window = create_plot_window(vis, '#Epochs', 'Loss', 'Training Avg Loss - %s' % model_name)
 val_avg_loss_window = create_plot_window(vis, '#Epochs', 'Loss', 'Validation Avg Loss - %s' % model_name)
 
@@ -120,10 +118,6 @@ for epoch in range(epochs):
 		loss.backward()
 		#update params and zero grads
 		optimizer.step()
-
-		#print stats
-	
-		#vis.line(X=np.array([total_iterations]), Y=np.array([loss.item()]), win=train_loss_window, update='append')	
 
 	with torch.no_grad():	
 		for x_val, y_val in val_loader:
