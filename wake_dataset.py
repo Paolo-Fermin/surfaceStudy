@@ -3,6 +3,12 @@ from torch.utils.data import Dataset
 import os
 import pandas as pd
 
+#create class that inherits abstract class Dataset
+'''
+Dataset needs to be able to access the /data/ folder, go into each case and load each component's wake image. It needs to be able to return an image based upon an input of dTdz and d0 (and which component?).
+
+Ideally, don't read in all the images at once, and only load them in through the __getitem__ method 
+'''
 
 class WakeDataset(Dataset):
 	'''Dataset to manage wake image data'''
