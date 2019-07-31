@@ -42,22 +42,25 @@ class WakeDataset(Dataset):
 		#print(uy_data)		
 		
 		#trim data to 128x1024		
-		uy_data = self.crop(uy_data)
+		uy_data = self.crop(uy_data, 1024)
 		#print(uy_data)
 
+		if self.transform:
+			uy_data = self.crop(uy_data, 512)
+			
 		#convert data to tensor
 		uy_data_tensor = torch.FloatTensor(uy_data.values)
 		#print('Target size: ' + str(self.uy_data_tensor.size()))
-
-		if self.transform:
-			uy_data_tensor = self.rescale(uy_data_tensor, -1, 1)
-
-		return self.input_combos_tensor[index].view(1, 1, 2), uy_data_tensor.view(1, 128, 512)
+				
+		#rescale data to range (-1, 1)	
+		uy_data_tensor = self.rescale(uy_data_tensor, -1, 1)	
+		
+		return self.input_combos_tensor[index].view(1, 1, 2), uy_data_tensor.view(1, 128, len(uy_data.columns))
 	
 	def rescale(self, tensor, newMin, newMax): 	
 		return newMin + (((tensor - torch.min(tensor)) * (newMax - newMin)) / (torch.max(tensor) - torch.min(tensor)))
 
-	def crop(self, df):
-		df.drop(df.columns[-(len(df.columns) - 512):], axis=1, inplace=True)
+	def crop(self, df, num):
+		df.drop(df.columns[-(len(df.columns) - num):], axis=1, inplace=True)
 		return df
 

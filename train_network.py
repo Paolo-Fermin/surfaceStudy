@@ -1,31 +1,47 @@
-from datetime import datetime
-
-start_time = datetime.now()
-
 import os
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import argparse
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
 from torch.utils.data import DataLoader
 from torchvision import transforms, utils
 from torch.utils.data.dataset import random_split
 from torch.optim.lr_scheduler import MultiStepLR
+from torchsummary import summary
 
-from wake_model import WakeModel
+from wake_model import WakeModelFull, WakeModelCropped
 from wake_dataset import WakeDataset
 
 import visdom
 import logging
-from torchsummary import summary
-
 from utils import set_logger
+from datetime import datetime
+
+start_time = datetime.now()
+
+#parse command line args
+parser = argparse.ArgumentParser()
+parser.add_argument('--epochs', help='Specify the number of epochs for training')
+parser.add_argument('--crop', help='Boolean: whether to crop data by half (default False)')
+args = parser.parse_args()
+if args.epochs:
+	epochs = int(args.epochs)
+else: 
+	epochs = 1000
+if args.crop:
+	crop = args.crop
+else:
+	crop = False
+
+#define random torch seed for consistency
+torch.manual_seed(8)
 
 #get index of most recent model name to save to new file
-
 i = 0
 while os.path.exists(os.path.join(os.getcwd(), 'logs', 'wake_net_%d' %i)):
 	i += 1
@@ -34,30 +50,29 @@ logdir = os.path.join(os.getcwd(), 'logs', model_name)
 os.mkdir(logdir)
 set_logger(os.path.join(logdir, model_name + str('_training.log')))
 
-torch.manual_seed(8)
+#get model architecture
+if crop:
+	model = WakeModelCropped()
+else:
+	model = WakeModelFull()
 
-model = WakeModel()
-
-logging.info('cwd: ' + str(os.getcwd()))
-
-#log model architecture
+#print model architecture
 #logging.info(summary(model, (1, 1, 2)))
 summary(model, (1, 1, 2))
 
-train_dataset = WakeDataset(os.path.join(os.getcwd(), 'data'), transform=True)
-val_dataset = WakeDataset(os.path.join(os.getcwd(), 'data', 'val_data'), transform=True)
+
+train_dataset = WakeDataset(os.path.join(os.getcwd(), 'data'), transform=crop)
+val_dataset = WakeDataset(os.path.join(os.getcwd(), 'data', 'val_data'), transform=crop)
 #train_dataset, val_dataset = random_split(wake_dataset, [7, 2])
 #print(len(wake_dataset))
 
 train_loader = DataLoader(dataset=train_dataset, batch_size=1, shuffle=True)
 val_loader = DataLoader(dataset=val_dataset, batch_size=1, shuffle=True)
 
-
+#define some hyperparameters
 loss_fn = nn.MSELoss()
-
 lr = 1e-3
 optimizer = optim.Adam(model.parameters(), lr=lr, betas=(0.5, 0.999))
-epochs = 100000
 log_interval = 1
 
 logging.info('loss: {}'.format(loss_fn))
