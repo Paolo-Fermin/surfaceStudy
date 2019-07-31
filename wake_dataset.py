@@ -3,6 +3,12 @@ from torch.utils.data import Dataset
 import os
 import pandas as pd
 
+#create class that inherits abstract class Dataset
+'''
+Dataset needs to be able to access the /data/ folder, go into each case and load each component's wake image. It needs to be able to return an image based upon an input of dTdz and d0 (and which component?).
+
+Ideally, don't read in all the images at once, and only load them in through the __getitem__ method 
+'''
 
 class WakeDataset(Dataset):
 	'''Dataset to manage wake image data'''
@@ -36,9 +42,7 @@ class WakeDataset(Dataset):
 		#print(uy_data)		
 		
 		#trim data to 128x1024		
-		drop_cols = 33
-		uy_data.drop(uy_data.columns[:drop_cols/2], axis=1, inplace=True)
-		uy_data.drop(uy_data.columns[-drop_cols/2-1:], axis=1, inplace=True)
+		uy_data = self.crop(uy_data)
 		#print(uy_data)
 
 		#convert data to tensor
@@ -48,8 +52,12 @@ class WakeDataset(Dataset):
 		if self.transform:
 			uy_data_tensor = self.rescale(uy_data_tensor, -1, 1)
 
-		return self.input_combos_tensor[index].view(1, 1, 2), uy_data_tensor.view(1, 128, 1024)
+		return self.input_combos_tensor[index].view(1, 1, 2), uy_data_tensor.view(1, 128, 512)
 	
 	def rescale(self, tensor, newMin, newMax): 	
 		return newMin + (((tensor - torch.min(tensor)) * (newMax - newMin)) / (torch.max(tensor) - torch.min(tensor)))
+
+	def crop(self, df):
+		df.drop(df.columns[-(len(df.columns) - 512):], axis=1, inplace=True)
+		return df
 
