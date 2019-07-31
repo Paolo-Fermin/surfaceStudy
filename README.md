@@ -1,15 +1,24 @@
-NEURAL NETWORK WAKE IMAGE STUDY
+# NEURAL NETWORK WAKE IMAGE STUDY
 
 This directory contains the files necessary to create a neural network that will take input of dTdz and d0 (change of temperature wrt depth and initial depth) and will produce a wake image. 
 
-SETUP 
+## Table of Contents
+* [Setup environment](#setup-environment)
+* [Obtaining training data](#obtaining-training-data)
+* [Running training](#running-training)
+* [Visualization](#visualization)
+
+
+
+## Setup environment
+
 You will need a few Python packages before getting started. You can use the pip package manager to install these. If you don't have pip installed, run:
 
-sudo apt-get install python-pip
+$ sudo apt-get install python-pip
 
 Once pip is installed, run:
 
-pip install <python package> 
+$ pip install <python package> 
 
 The packages you will need are: 
 - pytorch
@@ -20,7 +29,8 @@ The packages you will need are:
 - visdom
 
 
-OBTAINING TRAINING DATA
+## Obtaining training data
+
 To create OpenFOAM training data, first you must specify what dTdz and d0 values you want to test. These can be specified near the beginning of the parameter_variation.py script within the lists 'temps' and 'depths'. After specifying your input variables, run 
 
 python parameter_variation.py
@@ -29,11 +39,12 @@ Each case takes about 3-4 hours to finish execution. It will run faster if you s
 
 Once you have finished OpenFOAM, run 
 
-python get_data.py
+$ python get_data.py
 
 This script will read the Uy and Uz arrays that we care about, and organize them in the /data/ folder to be read by the neural network. They will be stored in folders named by case input variables, much like how they are stored in the openfoamruns/ folder. You will have to manually sort the cases into train_data/, val_data/, and test_data/ folders. Copy the whole directory, not just the .csv files, into these folders. The directory names are how the network will determine the values of the input variables. (Sorry I didn't write a script for this - I figured there were few enough cases that it would be simpler to sort them manually). 
 
-RUNNING TRAINING
+## Running training
+
 The main components necessary for network training are split between three python scripts. 
 
 1. wake_model.py
@@ -47,18 +58,18 @@ The main components necessary for network training are split between three pytho
 
 To run the actual training, just call:
 
-python torch_nn.py 
+$ python torch_nn.py 
 
 
-VISUALIZATION
+## Visualization
 During training, make sure to open up another terminal and run the following command:
 
-visdom
+$ visdom
 
 This will open up a visdom server that can be accessed by an internet browser on localhost:8097. Here, you can see the network's loss and validation loss graphs during training. 
 
 After training, if you would like to see the actual predictions of the network, run:
 
-python test_vis.py [--num MODEL NUM] [--crop]
+$ python test_vis.py [--num MODEL NUM] [--crop]
 
 The --num flag allows you to specify exactly which network's weights to load from the logs/ folder. By default, it will load the most recent one. The --crop flag is used when the network was trained with data that has been cropped to 128x512. This is for testing purposes: in the final implementation, I will decide on a single consistent dimension to use for data. 
