@@ -61,8 +61,8 @@ else:
 summary(model, (1, 1, 2))
 
 #get pytorch datasets and create dataloaders for them
-train_dataset = WakeDataset(os.path.join(os.getcwd(), 'data'), transform=crop)
-val_dataset = WakeDataset(os.path.join(os.getcwd(), 'data', 'val_data'), transform=crop)
+train_dataset = WakeDataset(os.path.join(os.getcwd(), 'data'), 'train_data', transform=crop)
+val_dataset = WakeDataset(os.path.join(os.getcwd(), 'data'), 'val_data', transform=crop)
 
 train_loader = DataLoader(dataset=train_dataset, batch_size=1, shuffle=True)
 val_loader = DataLoader(dataset=val_dataset, batch_size=1, shuffle=True)
