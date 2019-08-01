@@ -30,6 +30,9 @@ class WakeDataset(Dataset):
 		#turn input combos into a tensor
 		self.input_combos_tensor = torch.FloatTensor(input_combos)
 			
+		self.frame = pd.DataFrame(input_combos)
+		self.frame.columns = ['dTdz', 'depth']
+
 		self.transform = transform
 
 	def __len__(self):
@@ -40,10 +43,10 @@ class WakeDataset(Dataset):
 		item = self.input_combos_tensor[index]
 
 		dTdz = item[0]
-		z = item[1]
+		depth = item[1]
 
 		#return data in necessary format
-		case_dir = '/%s/dTdz%0.3f_z%d' % (self.root_dir, dTdz, z)
+		case_dir = '/%s/dTdz%0.3f_z%d' % (self.root_dir, dTdz, depth)
 		uy_data = pd.read_csv(os.path.join(case_dir, 'Uy.csv'), header=None)
 		#print(uy_data)		
 		
@@ -54,17 +57,25 @@ class WakeDataset(Dataset):
 		if self.transform:
 			uy_data = self.crop(uy_data, 512)
 			
-		#convert data to tensor
+		#convert output data to tensor
 		uy_data_tensor = torch.FloatTensor(uy_data.values)
-		#print('Target size: ' + str(self.uy_data_tensor.size()))
-				
-		#rescale data to range (-1, 1)	
-		uy_data_tensor = self.rescale(uy_data_tensor, -1, 1)	
+			
+		#rescale output data to range (-1, 1)	
+		y = self.rescale(uy_data_tensor, -1, 1)
+
+		#rescale inputs 
+		dTdz = rescale_by_value(dTdz, 'dTdz', -1, 1)
+		depth = rescale_by_value(depth, 'depth', -1, 1)	
 		
-		return item.view(1, 1, 2), uy_data_tensor.view(1, 128, len(uy_data.columns))
+		x = torch.stack([dTdz, depth], 0)		
+
+		return x.view(1, 1, 2), y.view(1, 128, len(uy_data.columns))
 	
 	def rescale(self, tensor, newMin, newMax): 	
 		return newMin + (((tensor - torch.min(tensor)) * (newMax - newMin)) / (torch.max(tensor) - torch.min(tensor)))
+		
+	def rescale_by_value(self, val, col, newMin, newMax):
+		return newMin + (((val - self.frame[col].min())) * (newMax - newMin)) / (self.frame[col].max() - self.frame[col].min())
 
 	def crop(self, df, num):
 		df.drop(df.columns[-(len(df.columns) - num):], axis=1, inplace=True)
