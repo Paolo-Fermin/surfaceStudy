@@ -20,7 +20,7 @@ $ sudo apt-get install python-pip
 Once pip is installed, run:
 
 ```
-$ pip install <python package> 
+$ pip install <package> 
 ```
 
 The packages you will need are: 
@@ -44,14 +44,17 @@ Once you have finished OpenFOAM, run `python get_data.py` This script will read 
 
 The main components necessary for network training are split between three python scripts. 
 
-1. wake_model.py
-	This script defines the architecture of the network. Pretty straightforward. Read pytorch documentation online if you want to modify the architecture. An important thing to note is that this is a convolutional neural network, and this means that the network is very sensitive to the dimensions of input and output tensors. If you would like to change the dimensions of the output tensor, you must do so by changing the hyperparameters of the network, you cannot change the dimensions directly. 
+### 1. wake_model.py
 
-2. wake_dataset.py
-	This script contains a class that is called by `torch_nn.py` to compile all the data to be fed into the network defined by `wake_model.py`. It also contains helper functions to transform the data to fit the network. Some of these include cropping the data to 128x1024 or 128x512 to agree with the size of the output tensor of the network.
+This script defines the architecture of the network. Pretty straightforward. Read pytorch documentation online if you want to modify the architecture. An important thing to note is that this is a convolutional neural network, and this means that the network is very sensitive to the dimensions of input and output tensors. If you would like to change the dimensions of the output tensor, you must do so by changing the hyperparameters of the network, you cannot change the dimensions directly. 
 
-3. torch_nn.py 
-	This script is the engine that actually runs the training. It loads the network model and then loads both training and validation datasets, called by their directory names within the data/ folder. Then it calls a visdom server to display loss graphs live. If you are getting strange visdom errors, see the VISUALIZATION section below. These errors shouldn't affect the training process itself. You can change the training parameters such as number of epochs, learning rate, optimizer, loss function, etc in this script. Once the script is done execution, it will store the network's weights in the `logs/` folder, where they can be accessed for later use.
+### 2. wake_dataset.py
+
+This script contains a class that is called by `torch_nn.py` to compile all the data to be fed into the network defined by `wake_model.py`. It also contains helper functions to transform the data to fit the network. Some of these include cropping the data to 128x1024 or 128x512 to agree with the size of the output tensor of the network.
+
+### 3. torch_nn.py 
+
+This script is the engine that actually runs the training. It loads the network model and then loads both training and validation datasets, called by their directory names within the data/ folder. Then it calls a visdom server to display loss graphs live. If you are getting strange visdom errors, see the VISUALIZATION section below. These errors shouldn't affect the training process itself. You can change the training parameters such as number of epochs, learning rate, optimizer, loss function, etc in this script. Once the script is done execution, it will store the network's weights in the `logs/` folder, where they can be accessed for later use.
 
 To run the actual training, just call `python torch_nn.py`
 
