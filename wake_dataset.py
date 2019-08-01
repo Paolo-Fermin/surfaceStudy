@@ -64,8 +64,8 @@ class WakeDataset(Dataset):
 		y = self.rescale(uy_data_tensor, -1, 1)
 
 		#rescale inputs 
-		dTdz = rescale_by_value(dTdz, 'dTdz', -1, 1)
-		depth = rescale_by_value(depth, 'depth', -1, 1)	
+		dTdz = self.rescale_by_value(dTdz, 'dTdz', -1, 1)
+		depth = self.rescale_by_value(depth, 'depth', -1, 1)	
 		
 		x = torch.stack([dTdz, depth], 0)		
 
