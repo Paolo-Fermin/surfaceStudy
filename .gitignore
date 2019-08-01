@@ -1,7 +1,7 @@
 dT*
 basecaseBAK
 data/
-*.ipynb
+*.ipynb*
 visdom_test.py
 checkpoints/
 *.pt
