@@ -60,15 +60,14 @@ else:
 #logging.info(summary(model, (1, 1, 2)))
 summary(model, (1, 1, 2))
 
+#get pytorch datasets and create dataloaders for them
 train_dataset = WakeDataset(os.path.join(os.getcwd(), 'data'), transform=crop)
 val_dataset = WakeDataset(os.path.join(os.getcwd(), 'data', 'val_data'), transform=crop)
-#train_dataset, val_dataset = random_split(wake_dataset, [7, 2])
-#print(len(wake_dataset))
 
 train_loader = DataLoader(dataset=train_dataset, batch_size=1, shuffle=True)
 val_loader = DataLoader(dataset=val_dataset, batch_size=1, shuffle=True)
 
-#define some hyperparameters
+#define some hyperparameters and log them
 loss_fn = nn.MSELoss()
 lr = 1e-3
 optimizer = optim.Adam(model.parameters(), lr=lr, betas=(0.5, 0.999))

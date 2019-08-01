@@ -16,6 +16,7 @@ while (os.path.exists('./logs/wake_net_%d' % i)):
 i -= 1
 model = WakeModel()
 
+#parse command line arguments, if available
 parser = argparse.ArgumentParser()
 parser.add_argument('--num', help='specify which model number to test')
 parser.add_argument('--crop', help='specify whether to crop real image for comparison', action='store_true')
@@ -23,6 +24,7 @@ args = parser.parse_args()
 if args.num:
 	i = int(args.num)
 
+#PyTorch stores models in two ways, saving just the weights or saving both the architecture and the weights. The former is preferred. See more in the Pytorch website 'Saving and Loading Models'. 
 try:
 	model.load_state_dict(torch.load('./logs/wake_net_%d/wake_net_%d_dict.pt' % (i, i)))
 except RuntimeError: 
@@ -55,6 +57,7 @@ with torch.no_grad():
 		
 		wake_real_np = wake_real.values
 	
+		#plot images
 		fig = plt.figure(i)
 		fig.suptitle(str(case))
 
