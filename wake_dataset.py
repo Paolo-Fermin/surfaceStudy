@@ -36,8 +36,14 @@ class WakeDataset(Dataset):
 		return self.length
 
 	def __getitem__(self, index):
+
+		item = self.input_combos_tensor[index]
+
+		dTdz = item[0]
+		z = item[1]
+
 		#return data in necessary format
-		case_dir = '/%s/dTdz%0.3f_z%d' % (self.root_dir, self.input_combos_tensor[index][0], self.input_combos_tensor[index][1])
+		case_dir = '/%s/dTdz%0.3f_z%d' % (self.root_dir, dTdz, z)
 		uy_data = pd.read_csv(os.path.join(case_dir, 'Uy.csv'), header=None)
 		#print(uy_data)		
 		
@@ -55,7 +61,7 @@ class WakeDataset(Dataset):
 		#rescale data to range (-1, 1)	
 		uy_data_tensor = self.rescale(uy_data_tensor, -1, 1)	
 		
-		return self.input_combos_tensor[index].view(1, 1, 2), uy_data_tensor.view(1, 128, len(uy_data.columns))
+		return item.view(1, 1, 2), uy_data_tensor.view(1, 128, len(uy_data.columns))
 	
 	def rescale(self, tensor, newMin, newMax): 	
 		return newMin + (((tensor - torch.min(tensor)) * (newMax - newMin)) / (torch.max(tensor) - torch.min(tensor)))
