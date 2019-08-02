@@ -64,7 +64,7 @@ summary(model, (1, 1, 2))
 train_dataset = WakeDataset(os.path.join(os.getcwd(), 'data'), 'train_data', transform=crop)
 val_dataset = WakeDataset(os.path.join(os.getcwd(), 'data'), 'val_data', transform=crop)
 
-train_loader = DataLoader(dataset=train_dataset, batch_size=1, shuffle=True)
+train_loader = DataLoader(dataset=train_dataset, batch_size=2, shuffle=True)
 val_loader = DataLoader(dataset=val_dataset, batch_size=1, shuffle=True)
 
 #define some hyperparameters and log them
