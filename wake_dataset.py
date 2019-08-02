@@ -3,6 +3,8 @@ from torch.utils.data import Dataset
 import os
 import pandas as pd
 
+from utils import rescale_by_value
+
 #create class that inherits abstract class Dataset
 '''
 Dataset needs to be able to access the /data/ folder, go into each case and load each component's wake image. It needs to be able to return an image based upon an input of dTdz and d0 (and which component?).
@@ -71,11 +73,11 @@ class WakeDataset(Dataset):
 		output_tensor = torch.FloatTensor(output.values)
 			
 		#rescale output data to range (-1, 1)	
-		y = self.rescale_by_value(output_tensor, torch.min(output_tensor), torch.max(output_tensor), -1, 1)
+		y = rescale_by_value(output_tensor, torch.min(output_tensor), torch.max(output_tensor), -1, 1)
 
 		#rescale inputs 
-		dTdz = self.rescale_by_value(dTdz, self.bounds[0][0], self.bounds[1][0], -1, 1)
-		depth = self.rescale_by_value(depth, self.bounds[0][1], self.bounds[1][1], -1, 1)	
+		dTdz = rescale_by_value(dTdz, self.bounds[0][0], self.bounds[1][0], -1, 1)
+		depth = rescale_by_value(depth, self.bounds[0][1], self.bounds[1][1], -1, 1)	
 		
 		x = torch.stack([dTdz, depth], 0)		
 
@@ -84,9 +86,6 @@ class WakeDataset(Dataset):
 	def rescale(self, tensor, newMin, newMax): 	
 		return newMin + (((tensor - torch.min(tensor)) * (newMax - newMin)) / (torch.max(tensor) - torch.min(tensor)))
 		
-	def rescale_by_value(self, val, oldMin, oldMax, newMin, newMax):
-		return newMin + (((val - oldMin)) * (newMax - newMin)) / (oldMax - oldMin)
-
 	def crop(self, df, num):
 		df.drop(df.columns[-(len(df.columns) - num):], axis=1, inplace=True)
 		return df

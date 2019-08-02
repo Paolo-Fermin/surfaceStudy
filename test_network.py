@@ -10,6 +10,8 @@ from torch.utils.data import DataLoader
 from wake_dataset import WakeDataset
 from wake_model import WakeModelFull, WakeModelCropped
 
+from utils import rescale_by_value
+
 #load the most recent model
 i = 0
 while (os.path.exists('./logs/wake_net_%d' % i)):
@@ -55,14 +57,7 @@ for case in os.listdir(test_case_dir):
 case_frame = pd.DataFrame(cases)
 case_frame.columns = ['dTdz', 'depth']
 
-def rescale_by_value(self, val, oldMin, oldMax, newMin, newMax):
-	return newMin + (((val - oldMin)) * (newMax - newMin)) / (oldMax - oldMin)
-
-
 print(case_frame)
-
-def rescale_by_value(val, oldMin, oldMax, newMin, newMax):
-	return newMin + (((val - oldMin)) * (newMax - newMin)) / (oldMax - oldMin)
 
 def crop(df, num):
 	df.drop(df.columns[-(len(df.columns) - num):], axis=1, inplace=True)
