@@ -107,20 +107,40 @@ with torch.no_grad():
 
 		diff = torch.from_numpy(wake_real).float() - wake_pred
 
+		fig, axs = plt.subplots(3, sharex=True, sharey=True)
+		fig.suptitle(str(case))	
+		fig.tight_layout()
+
+		real_plot = axs[0].pcolor(wake_real)
+		#axs[0].colorbar()
+		axs[0].set_title('Real image')
+
+		pred_plot = axs[1].pcolor(wake_pred)
+		#axs[1].colorbar()
+		axs[1].set_title('Predicted image')
+
+		diff_plot = axs[2].pcolor(diff)
+		#axs[2].colorbar()
+		axs[2].set_title('Difference')
+
+		fig.colorbar(real_plot, ax=axs[0])
+		fig.colorbar(pred_plot, ax=axs[1])
+		fig.colorbar(diff_plot, ax=axs[2])
+		'''
 		#plot images
 		fig = plt.figure(i)
 		fig.suptitle(str(case))
 
-		plt.subplot(3, 1, 1)
-		plt.pcolor(wake_pred)
-		plt.colorbar()
-
-		plt.subplot(3, 1, 2)
+		plt.subplot(3, 1, 1).set_title('Real image')		
 		plt.pcolor(wake_real)
 		plt.colorbar()
 
-		plt.subplot(3, 1, 3)
-		plt.pcolor(diff)
+		plt.subplot(3, 1, 2).set_title('Predicted image')
+		plt.pcolor(wake_pred)
 		plt.colorbar()
 
+		plt.subplot(3, 1, 3).set_title('Difference')		
+		plt.pcolor(diff)
+		plt.colorbar()
+		'''
 plt.show()
