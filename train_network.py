@@ -90,6 +90,15 @@ val_avg_loss_window = create_plot_window(vis, '#Epochs', 'Loss', 'Validation Avg
 
 total_iterations = 0
 
+def save_checkpoint(state, is_best, filename=os.path.join(os.getcwd(),'logs', model_name + str('_best.pth.tar'))):
+	if is_best:
+		print('=> Saving a new best')
+		torch.save(state, filename)
+	else:
+		print('=> Validation loss did not improve')
+
+best_val_loss = 1.0
+
 #training loop
 for epoch in range(epochs):
 
@@ -149,6 +158,18 @@ for epoch in range(epochs):
 		running_val_loss = 0.0
 		val_iterations = 0.0
 		logging.info('Elapsed time: ' + str(datetime.now() - start_time))
+
+		if avg_val_loss < best_val_loss:
+			is_best = True
+			best_val_loss = avg_val_loss
+		else:
+			is_best = False	
+	
+		save_checkpoint({
+			'epoch': epoch + 1,
+			'state_dict': model.state_dict(),
+			'best_val_loss': avg_val_loss
+		}, is_best)
 
 	step_scheduler.step()
 
