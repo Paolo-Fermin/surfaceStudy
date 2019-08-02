@@ -107,40 +107,25 @@ with torch.no_grad():
 
 		diff = torch.from_numpy(wake_real).float() - wake_pred
 
-		fig, axs = plt.subplots(3, sharex=True, sharey=True)
-		fig.suptitle(str(case))	
-		fig.tight_layout()
+		fig, axs = plt.subplots(3)
 
-		real_plot = axs[0].pcolor(wake_real)
-		#axs[0].colorbar()
+		fig.tight_layout(h_pad=1.5)
 		axs[0].set_title('Real image')
+		real_plot = axs[0].pcolor(wake_real, vmin=-1, vmax=1)
 
-		pred_plot = axs[1].pcolor(wake_pred)
-		#axs[1].colorbar()
 		axs[1].set_title('Predicted image')
+		pred_plot = axs[1].pcolor(wake_pred, vmin=-1, vmax=1)
 
-		diff_plot = axs[2].pcolor(diff)
-		#axs[2].colorbar()
 		axs[2].set_title('Difference')
+		diff_plot = axs[2].pcolor(diff, vmin=-1, vmax=1)
 
-		fig.colorbar(real_plot, ax=axs[0])
-		fig.colorbar(pred_plot, ax=axs[1])
-		fig.colorbar(diff_plot, ax=axs[2])
-		'''
-		#plot images
-		fig = plt.figure(i)
-		fig.suptitle(str(case))
+	
 
-		plt.subplot(3, 1, 1).set_title('Real image')		
-		plt.pcolor(wake_real)
-		plt.colorbar()
+		fig.subplots_adjust(right=0.8, top=0.87)
+		fig.suptitle(str(case))	
+		cbar_ax = fig.add_axes([.85, .15, 0.05, 0.7])
+		fig.colorbar(real_plot, cax=cbar_ax)
+			
+		print('Average difference: {}'.format(diff.mean()))	
 
-		plt.subplot(3, 1, 2).set_title('Predicted image')
-		plt.pcolor(wake_pred)
-		plt.colorbar()
-
-		plt.subplot(3, 1, 3).set_title('Difference')		
-		plt.pcolor(diff)
-		plt.colorbar()
-		'''
 plt.show()
