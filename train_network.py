@@ -64,7 +64,7 @@ summary(model, (1, 1, 2))
 train_dataset = WakeDataset(os.path.join(os.getcwd(), 'data'), 'train_data', transform=crop)
 val_dataset = WakeDataset(os.path.join(os.getcwd(), 'data'), 'val_data', transform=crop)
 
-train_loader = DataLoader(dataset=train_dataset, batch_size=2, shuffle=True)
+train_loader = DataLoader(dataset=train_dataset, batch_size=1, shuffle=True)
 val_loader = DataLoader(dataset=val_dataset, batch_size=1, shuffle=True)
 
 #define some hyperparameters and log them
@@ -90,7 +90,7 @@ val_avg_loss_window = create_plot_window(vis, '#Epochs', 'Loss', 'Validation Avg
 
 total_iterations = 0
 
-def save_checkpoint(state, is_best, filename=os.path.join(os.getcwd(),'logs', model_name + str('_best.pth.tar'))):
+def save_checkpoint(state, is_best, filename=os.path.join(os.getcwd(),'logs', model_name + str('_best.pt'))):
 	if is_best:
 		print('=> Saving a new best')
 		torch.save(state, filename)
@@ -175,10 +175,10 @@ for epoch in range(epochs):
 
 #save model to a new file
 logging.info('Saving state dict...')
-torch.save(model.state_dict(), os.path.join(logdir, model_name + '_dict.pt'))
+torch.save(model.state_dict(), os.path.join(logdir, model_name + '_last.pt'))
 logging.info('State dict saved')
 
-torch.save(model, os.path.join(logdir, model_name + '_model.pt'))
+torch.save(model, os.path.join(logdir, model_name + '_fullmodel.pt'))
 
 logging.info('Finished training')
 logging.info('Execution time: ' + str(datetime.now() - start_time))

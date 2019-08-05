@@ -23,15 +23,20 @@ model = WakeModelFull()
 parser = argparse.ArgumentParser()
 parser.add_argument('--num', help='specify which model number to test')
 parser.add_argument('--crop', help='specify whether to crop real image for comparison', action='store_true')
+parser.add_argument('--last', help='specify whether to save the last or best model, default best', action='store_true')
 args = parser.parse_args()
 if args.num:
 	i = int(args.num)
+if args.last:
+	model_option = 'last'
+else:
+	model_option = 'best'
 
 #PyTorch stores models in two ways, saving just the weights or saving both the architecture and the weights. The former is preferred. See more in the Pytorch website 'Saving and Loading Models'. 
 try:
-	model.load_state_dict(torch.load('./logs/wake_net_%d/wake_net_%d_dict.pt' % (i, i)))
+	model.load_state_dict(torch.load('./logs/wake_net_%d/wake_net_%d_%s.pt' % (i, i, model_option)))
 except RuntimeError: 
-	model = torch.load('./logs/wake_net_%d/wake_net_%d_model.pt' % (i, i))
+	model = torch.load('./logs/wake_net_%d/wake_net_%d_fullmodel.pt' % (i, i))
 #set to evaluation mode
 model.eval()
 
