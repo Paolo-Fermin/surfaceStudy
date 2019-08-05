@@ -37,6 +37,10 @@ try:
 	model.load_state_dict(torch.load('./logs/wake_net_%d/wake_net_%d_%s.pt' % (i, i, model_option)))
 except RuntimeError: 
 	model = torch.load('./logs/wake_net_%d/wake_net_%d_fullmodel.pt' % (i, i))
+except IOError:
+	#account for old naming convention 
+	model.load_state_dict(torch.load('./logs/wake_net_%d/wake_net_%d_dict.pt' % (i, i)))
+
 #set to evaluation mode
 model.eval()
 
@@ -52,7 +56,7 @@ all_inputs.columns = ['dTdz', 'depth']
 #store boundary values
 bounds = [[all_inputs['dTdz'].min(), all_inputs['depth'].min()], [all_inputs['dTdz'].max(), all_inputs['depth'].max()]]
 
-#get all case vals and store in dataframe
+#get all test case vals and store in dataframe
 cases = []
 test_case_dir = os.path.join('data', 'test_data')
 for case in os.listdir(test_case_dir):
