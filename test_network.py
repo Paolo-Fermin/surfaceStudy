@@ -72,6 +72,18 @@ def crop(df, num):
 	df.drop(df.columns[-(len(df.columns) - num):], axis=1, inplace=True)
 	return df
 
+
+#get x and y axis values for accurate plotting
+x_axis = [i for i in range(128)]
+y_axis = [i for i in range(1024)]
+
+for i, x_val in enumerate(x_axis):
+    x_axis[i] = rescale_by_value(x_val, 0, len(x_axis), 0, 5 * 3810)
+
+for i, y_val in enumerate(y_axis):
+    y_axis[i] = rescale_by_value(float(y_val), 0, len(y_axis), 0, 750)
+
+
 with torch.no_grad():
 	for i, case in enumerate(cases):
 	
@@ -88,6 +100,7 @@ with torch.no_grad():
 		#print(wake_pred)
 		#print(wake_pred.size())
 		wake_pred = torch.squeeze(wake_pred)
+		wake_pred = torch.transpose(wake_pred, 0, 1)
 		#print(wake_pred)
 		print(wake_pred.size())
 		#print(wake_pred_squeezed.size())
@@ -100,36 +113,34 @@ with torch.no_grad():
 		if args.crop:
 			#trim to 128x512
 			wake_real = crop(wake_real, 512)
+
+		wake_real = wake_real.transpose()
 		
 		#convert dataframe to numpy array
 		wake_real = wake_real.values
 		#rescale numpy array to (-1, 1)	
 		wake_real = rescale_by_value(wake_real, np.min(wake_real), np.max(wake_real), -1, 1)
 
-		print(wake_pred)
-		print(wake_real)		
+		print(wake_real.shape)		
 
 		diff = torch.from_numpy(wake_real).float() - wake_pred
 
-		fig, axs = plt.subplots(3)
+		fig, axs = plt.subplots(2)
 
 		fig.tight_layout(h_pad=1.5)
 		axs[0].set_title('Real image')
-		real_plot = axs[0].pcolor(wake_real, vmin=-1, vmax=1)
+		real_plot = axs[0].pcolor(x_axis, y_axis, wake_real, vmin=-1, vmax=1)
 
 		axs[1].set_title('Predicted image')
-		pred_plot = axs[1].pcolor(wake_pred, vmin=-1, vmax=1)
-
-		axs[2].set_title('Difference')
-		diff_plot = axs[2].pcolor(diff, vmin=-1, vmax=1)
-
+		pred_plot = axs[1].pcolor(x_axis, y_axis, wake_pred, vmin=-1, vmax=1)
 	
 
 		fig.subplots_adjust(right=0.8, top=0.87)
 		fig.suptitle(str(case))	
 		cbar_ax = fig.add_axes([.85, .15, 0.05, 0.7])
 		fig.colorbar(real_plot, cax=cbar_ax)
-			
-		print('Average difference: {}'.format(diff.mean()))	
+		
+
+		#print('Average difference: {}'.format(diff.mean()))	
 
 plt.show()
