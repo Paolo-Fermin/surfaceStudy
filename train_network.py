@@ -92,10 +92,10 @@ total_iterations = 0
 
 def save_checkpoint(state, is_best, filename=os.path.join(os.getcwd(),'logs', model_name + str('_best.pt'))):
 	if is_best:
-		print('=> Saving a new best')
+		logging.info('=> Saving a new best\n')
 		torch.save(state, filename)
 	else:
-		print('=> Validation loss did not improve')
+		logging.info('=> Validation loss did not improve\n')
 
 best_val_loss = 1.0
 
@@ -152,7 +152,7 @@ for epoch in range(epochs):
 		train_iterations = 0.0
 		
 		avg_val_loss = running_val_loss / val_iterations
-		logging.info('Validation - Epoch: {} Avg Loss: {:.6e}\n'.format(epoch, avg_val_loss))
+		logging.info('Validation - Epoch: {} Avg Loss: {:.6e}'.format(epoch, avg_val_loss))
 		vis.line(X=np.array([epoch]), Y=np.array([avg_val_loss]), 
 			win=val_avg_loss_window, update='append')
 		running_val_loss = 0.0
