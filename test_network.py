@@ -99,7 +99,7 @@ with torch.no_grad():
 		
 		if args.crop:
 			#trim to 128x512
-			wake_real = crop(wake_real)
+			wake_real = crop(wake_real, 512)
 		
 		#convert dataframe to numpy array
 		wake_real = wake_real.values
