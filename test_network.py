@@ -123,8 +123,6 @@ with torch.no_grad():
 
 		print(wake_real.shape)		
 
-		diff = torch.from_numpy(wake_real).float() - wake_pred
-
 		fig, axs = plt.subplots(2)
 
 		fig.tight_layout(h_pad=1.5)
